@@ -1,0 +1,45 @@
+{
+  "name": "Roads at Risk - Hackensack DEM",
+  "source": "USGS 3DEP Bare Earth DEM Dynamic ImageServer",
+  "sourceUrl": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer",
+  "sourceDescription": "USGS 3D Elevation Program (3DEP) Bare Earth DEM Dynamic service, retrieved for the Roads at Risk municipal rollout.",
+  "downloadedAt": "2026-08-10",
+  "processing": "Exported from USGS 3DEP at municipal extent, masked to the Hackensack boundary, adaptively resampled to 5.1 ft pixels to keep the browser-delivered raster within operational size limits, and compressed as a Cloud Optimized GeoTIFF.",
+  "horizontalCrs": "EPSG:3857",
+  "verticalUnits": "meters",
+  "displayElevationUnits": "feet",
+  "pixelSizeMeters": 1.566134157006231,
+  "pixelSizeFeet": 5.138235423228237,
+  "adaptiveResolution": true,
+  "width": 3091,
+  "height": 5177,
+  "nodata": -999999,
+  "minMeters": -0.274,
+  "maxMeters": 41.932,
+  "meanMeters": 8.581,
+  "stdDevMeters": 8.273,
+  "minFeet": -0.8989501312300001,
+  "maxFeet": 137.57217847714003,
+  "webMercatorBounds": [
+    -8245246.185764,
+    4991512.480638179,
+    -8240405.265084693,
+    4999620.357169
+  ],
+  "leafletBounds": [
+    [
+      40.8586407,
+      -74.0683067
+    ],
+    [
+      40.9136973,
+      -74.0248202
+    ]
+  ],
+  "files": {
+    "demCog": "hackensack_dem_5ft_cog.tif",
+    "hillshadeCog": "hackensack_hillshade_cog.tif",
+    "hillshadePng": "hackensack_hillshade.png",
+    "boundaryGeojson": "hackensack_boundary.geojson"
+  }
+}
