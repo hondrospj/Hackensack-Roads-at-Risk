@@ -1,6 +1,6 @@
 {
   "schema": "roads-at-risk-flood-stats-v2",
-  "generatedAt": "2026-08-10T22:43:30.392Z",
+  "generatedAt": "2026-08-10T22:53:36.156Z",
   "gaugeName": "Hackensack",
   "station": {
     "usgsGaugeId": "01378570",
