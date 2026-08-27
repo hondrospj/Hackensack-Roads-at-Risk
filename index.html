@@ -2879,9 +2879,9 @@
 
     const map = L.map("map", { zoomControl:true, preferCanvas:true });
     const basemaps = {
-      current:L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        maxZoom:20,
-        attribution:"&copy; OpenStreetMap contributors &copy; CARTO"
+      current:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom:16,
+        attribution:"Tiles &copy; Esri"
       }),
       satellite:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
         maxZoom:20,
@@ -2895,9 +2895,9 @@
         maxZoom:19,
         attribution:"&copy; OpenStreetMap contributors"
       }),
-      dark:L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        maxZoom:20,
-        attribution:"&copy; OpenStreetMap contributors &copy; CARTO"
+      dark:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom:16,
+        attribution:"Tiles &copy; Esri"
       })
     };
     basemaps.current.addTo(map);
