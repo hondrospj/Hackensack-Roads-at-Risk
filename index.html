@@ -2433,7 +2433,6 @@
       }
     }
 
-+
     /* Unified tablet/mobile workspace: readable cards, no rail collisions. */
     @media (max-width: 1180px){
       body{
@@ -2642,6 +2641,618 @@
         min-height:220px;
       }
     }
+    /* RoadRisk workbench — shared Floodmapper/Dashboard design language. */
+    :root{
+      --right-rail:clamp(560px, 39vw, 680px);
+      --ui-gap:14px;
+      --map-control-h:88px;
+      --panel-radius:18px;
+      color-scheme:dark;
+    }
+
+    html{
+      -webkit-text-size-adjust:100%;
+      text-size-adjust:100%;
+    }
+
+    body{
+      font-size:16px;
+      font-synthesis:none;
+      text-rendering:optimizeLegibility;
+    }
+
+    button,
+    input,
+    select{
+      font:inherit;
+    }
+
+    button,
+    .fileLink,
+    input[type="number"],
+    .lineForm input,
+    .exportFormatRow select{
+      border-radius:12px;
+    }
+
+    button{
+      min-height:40px;
+      padding:9px 12px;
+      font-size:13px;
+      line-height:1.1;
+      letter-spacing:.005em;
+    }
+
+    .titleBar,
+    .panelBlock,
+    .toolPane,
+    .mobileToolNav,
+    .drawPrompt{
+      background:rgba(11,18,32,.94);
+      border:1px solid var(--line-strong);
+      box-shadow:0 22px 70px rgba(0,0,0,.36);
+      -webkit-backdrop-filter:blur(16px);
+      backdrop-filter:blur(16px);
+    }
+
+    .titleBar{
+      top:20px;
+      min-height:84px;
+      width:min(430px, calc(100vw - var(--right-rail) - 96px));
+      padding:14px 18px;
+      border-radius:22px;
+      gap:9px;
+    }
+
+    .eyebrow{
+      margin-bottom:4px;
+      font-size:12px;
+      letter-spacing:.13em;
+    }
+
+    h1{
+      font-size:clamp(30px, 2.4vw, 40px);
+      line-height:1.02;
+      letter-spacing:-.035em;
+    }
+
+    .badge{
+      min-height:30px;
+      padding:6px 11px;
+      font-size:12px;
+    }
+
+    .mapControl{
+      min-height:var(--map-control-h);
+      padding:12px;
+      border-radius:var(--panel-radius);
+    }
+
+    .mapControlHeader{
+      margin-bottom:8px;
+      font-size:14px;
+    }
+
+    .mapModes{
+      gap:8px;
+    }
+
+    .mapModes button{
+      min-height:42px;
+      padding:9px 6px;
+      border-radius:12px;
+      font-size:13px;
+    }
+
+    .rightStack{
+      top:calc(var(--ui-gap) + var(--map-control-h) + 10px);
+      grid-template-rows:minmax(570px, 1.65fr) minmax(310px, 1fr) minmax(180px, .58fr);
+      gap:12px;
+      padding-right:2px;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(96,165,250,.55) transparent;
+    }
+
+    .toolPane{
+      padding:14px;
+      border-radius:var(--panel-radius);
+    }
+
+    .toolTitleRow{
+      margin-bottom:12px;
+    }
+
+    .toolTitle{
+      gap:10px;
+      font-size:18px;
+      line-height:1.1;
+      letter-spacing:-.015em;
+    }
+
+    .titleDatumToggle{
+      width:164px;
+      gap:5px;
+    }
+
+    .titleDatumToggle button,
+    .drawAction,
+    .iconBtn,
+    .expandBtn{
+      min-height:38px;
+      font-size:12px;
+    }
+
+    .iconBtn,
+    .expandBtn{
+      width:40px;
+      min-width:40px;
+      padding:0;
+      font-size:22px;
+    }
+
+    .compactStats{
+      gap:9px;
+    }
+
+    .compactStats .stat{
+      min-height:68px;
+      padding:10px 11px;
+      border-radius:13px;
+      background:rgba(255,255,255,.04);
+    }
+
+    .stat .k,
+    .miniStat .k,
+    .metricRow .k{
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.15;
+      letter-spacing:.075em;
+    }
+
+    .compactStats .stat .v{
+      margin-top:6px;
+      font-size:20px;
+      line-height:1.08;
+      letter-spacing:-.02em;
+    }
+
+    .thresholdCompact{
+      margin:10px 0;
+      gap:8px;
+    }
+
+    .thresholdCompact button{
+      min-height:44px;
+      font-size:13px;
+    }
+
+    .thresholdCompact button small{
+      font-size:10px;
+    }
+
+    .thresholdInputRow input,
+    .uncertaintyInline input,
+    .lineForm input,
+    .exportFormatRow select{
+      min-height:42px;
+      font-size:14px;
+    }
+
+    .chartHeader{
+      min-height:34px;
+      margin-bottom:9px;
+    }
+
+    .chartTitle{
+      font-size:16px;
+    }
+
+    .chartKey{
+      gap:7px;
+    }
+
+    #profileChartKey{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+    }
+
+    .keyToggle{
+      min-width:0;
+      min-height:34px;
+      padding:6px 9px;
+      gap:7px;
+      font-size:12px;
+    }
+
+    .keyToggle input{
+      width:16px;
+      height:16px;
+      min-width:16px;
+    }
+
+    .chartWrap{
+      min-height:230px;
+    }
+
+    .scenarioRow{
+      gap:8px;
+      margin-bottom:9px;
+    }
+
+    .scenarioRow button{
+      min-height:42px;
+      font-size:13px;
+    }
+
+    .tinyChartLabel{
+      margin:6px 0 4px;
+      font-size:13px;
+    }
+
+    .tinyChartWrap{
+      min-height:180px;
+    }
+
+    .exportColumnTitle{
+      font-size:15px;
+    }
+
+    .lineForm{
+      grid-template-columns:minmax(0,1fr) 70px;
+      gap:8px;
+    }
+
+    .lineForm button,
+    .exportActions button,
+    .lineUtility button{
+      min-height:42px;
+      font-size:13px;
+    }
+
+    .exportStatus,
+    .modelNote{
+      display:none;
+    }
+
+    .leaflet-control-zoom a{
+      width:40px !important;
+      height:40px !important;
+      line-height:40px !important;
+      font-size:22px !important;
+    }
+
+    @media (min-width:1181px) and (max-height:860px){
+      :root{
+        --right-rail:clamp(540px, 40vw, 620px);
+        --map-control-h:80px;
+      }
+
+      .mapControl{padding:10px}
+      .mapModes button{min-height:36px}
+      .rightStack{
+        grid-template-rows:minmax(570px, 1.6fr) minmax(300px, .95fr) minmax(180px, .55fr);
+      }
+    }
+
+    @media (max-width:1180px){
+      :root{
+        --ui-gap:12px;
+      }
+
+      html,
+      body{
+        min-height:100%;
+        min-height:100dvh;
+        overflow-x:hidden;
+      }
+
+      body{
+        background:#0b1220;
+      }
+
+      #map{
+        height:48vh;
+        height:48svh;
+        min-height:340px;
+        max-height:540px;
+      }
+
+      .shell{
+        gap:14px;
+        padding:
+          14px
+          max(14px, env(safe-area-inset-right))
+          max(22px, env(safe-area-inset-bottom))
+          max(14px, env(safe-area-inset-left));
+        background:linear-gradient(180deg,#0b1220 0%,#0f1a2d 100%);
+      }
+
+      .titleBar,
+      .mapControl,
+      .rightStack{
+        width:min(100%, 940px);
+      }
+
+      .titleBar{
+        top:auto;
+        left:auto;
+        transform:none;
+      }
+
+      .rightStack{
+        position:relative;
+        inset:auto;
+        top:auto;
+        right:auto;
+        bottom:auto;
+      }
+
+      .titleBar{
+        min-height:82px;
+        padding:14px 16px;
+        border-radius:18px;
+      }
+
+      h1{
+        font-size:clamp(28px, 5vw, 36px);
+      }
+
+      .mapControl{
+        padding:12px;
+      }
+
+      .mapModes button{
+        min-height:48px;
+        font-size:14px;
+      }
+
+      .mobileToolNav{
+        top:max(8px, env(safe-area-inset-top));
+        gap:8px;
+        padding:7px;
+        border-radius:16px;
+      }
+
+      .mobileToolNav button{
+        min-height:50px;
+        font-size:14px;
+      }
+
+      .rightStack{
+        gap:14px;
+      }
+
+      .toolPane{
+        padding:16px;
+      }
+
+      .toolTitle{
+        font-size:20px;
+      }
+
+      .chartWrap{
+        height:clamp(300px, 38vw, 380px);
+        min-height:300px;
+      }
+
+      .tinyChartWrap{
+        height:clamp(250px, 32vw, 330px);
+        min-height:250px;
+      }
+
+      .crossSectionPane,
+      .floodHistoryPane,
+      .exportPane{
+        scroll-margin-top:88px;
+      }
+    }
+
+    @media (max-width:620px){
+      #map{
+        height:43vh;
+        height:43svh;
+        min-height:300px;
+        max-height:410px;
+      }
+
+      .shell{
+        gap:12px;
+        padding-top:12px;
+        padding-inline:max(10px, env(safe-area-inset-left));
+      }
+
+      .titleBar{
+        min-height:72px;
+        padding:11px 12px;
+        gap:8px;
+      }
+
+      .eyebrow{
+        font-size:11px;
+      }
+
+      h1,
+      .titleBar h1{
+        font-size:clamp(25px, 7vw, 30px);
+        white-space:normal;
+      }
+
+      .badge{
+        max-width:none;
+        min-height:30px;
+        padding:5px 8px;
+        font-size:11px;
+      }
+
+      .mapModes{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+
+      .mapModes button{
+        min-height:46px;
+      }
+
+      .mobileToolNav button{
+        min-height:48px;
+        padding:8px 5px;
+        font-size:13px;
+      }
+
+      .toolPane{
+        padding:13px;
+      }
+
+      .toolTitleRow,
+      .crossSectionPane .toolTitleRow{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+      }
+
+      .toolTitle{
+        display:grid;
+        grid-template-columns:minmax(0,1fr) minmax(138px,164px);
+        font-size:19px;
+      }
+
+      .paneActions,
+      .crossSectionPane .paneActions{
+        display:grid;
+        width:100%;
+        grid-template-columns:minmax(0,1fr) 44px;
+      }
+
+      .drawAction{
+        width:100%;
+      }
+
+      .compactStats{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:6px;
+      }
+
+      .compactStats .stat{
+        min-height:76px;
+        padding:9px 7px;
+      }
+
+      .compactStats .stat .v{
+        font-size:clamp(16px, 4.5vw, 19px);
+        overflow-wrap:anywhere;
+      }
+
+      .thresholdCompact{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+
+      .thresholdInputRow,
+      .uncertaintyInline{
+        grid-column:1 / -1;
+      }
+
+      .thresholdInputRow{
+        grid-template-columns:minmax(0,1fr) 84px;
+      }
+
+      .uncertaintyInline{
+        justify-content:end;
+      }
+
+      .chartHeader,
+      .chartKey,
+      .tinyChartLabel{
+        align-items:flex-start;
+      }
+
+      #profileChartKey{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+
+      .keyToggle{
+        font-size:11px;
+      }
+
+      .chartWrap{
+        height:280px;
+        min-height:280px;
+      }
+
+      .tinyChartWrap{
+        height:240px;
+        min-height:240px;
+      }
+
+      .exportGrid{
+        grid-template-columns:1fr;
+        gap:16px;
+      }
+    }
+
+    @media (max-width:430px){
+      #map{
+        height:40vh;
+        height:40svh;
+        min-height:270px;
+      }
+
+      .titleBar{
+        grid-template-columns:minmax(0,1fr) auto;
+      }
+
+      .titleBar h1{
+        font-size:24px;
+      }
+
+      .badge{
+        font-size:10px;
+      }
+
+      .compactStats .stat .k{
+        font-size:9px;
+      }
+
+      .compactStats .stat .v{
+        font-size:15px;
+      }
+
+      .chartWrap{height:260px;min-height:260px}
+      .tinyChartWrap{height:220px;min-height:220px}
+    }
+
+    @media (max-width:900px) and (orientation:landscape),
+           (max-height:520px) and (pointer:coarse){
+      #map{
+        height:52vh;
+        height:52svh;
+        min-height:210px;
+        max-height:300px;
+      }
+
+      .shell{
+        padding-top:10px;
+      }
+
+      .titleBar{
+        min-height:64px;
+        grid-template-columns:minmax(0,1fr) auto;
+      }
+
+      .titleBar h1{
+        font-size:24px;
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      *,
+      *::before,
+      *::after{
+        scroll-behavior:auto !important;
+        transition-duration:.01ms !important;
+        animation-duration:.01ms !important;
+        animation-iteration-count:1 !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2662,7 +3273,7 @@
 
     <section class="panelBlock mapControl" aria-label="Map view controls">
       <div class="mapControlHeader">
-        <span>Map View</span>
+        <span>Map</span>
       </div>
       <div class="mapModes" aria-label="Basemap">
         <button data-basemap="current" class="active" type="button">Light</button>
@@ -2677,20 +3288,20 @@
       <nav class="mobileToolNav" aria-label="Roads at Risk sections">
         <button type="button" data-mobile-target="crossSectionPane" aria-label="Jump to cross section tools" aria-current="true">Profile</button>
         <button type="button" data-mobile-target="floodHistoryPane" aria-label="Jump to flood history">History</button>
-        <button type="button" data-mobile-target="exportPane" aria-label="Jump to saved lines and export">Save &amp; Export</button>
+        <button type="button" data-mobile-target="exportPane" aria-label="Jump to saved lines and export">Export</button>
       </nav>
 
       <section class="toolPane crossSectionPane" id="crossSectionPane">
         <div class="toolTitleRow">
           <div class="toolTitle">
-            Cross Section
+            Road profile
             <span class="titleDatumToggle" aria-label="Elevation datum">
               <button data-datum="navd88" class="active" type="button">NAVD88</button>
               <button data-datum="mllw" class="secondary" type="button">MLLW</button>
             </span>
           </div>
           <div class="paneActions">
-            <button id="drawBtn" class="drawAction" type="button">Draw section</button>
+            <button id="drawBtn" class="drawAction" type="button">Draw</button>
             <button class="expandBtn secondary" type="button" data-expand-pane="crossSectionPane" aria-controls="crossSectionPane" aria-expanded="false" aria-label="Expand cross section" title="Expand cross section">+</button>
           </div>
         </div>
@@ -2702,7 +3313,7 @@
               <div class="v" id="minElev">-</div>
             </div>
             <div class="stat">
-              <div class="k">Exposed share</div>
+              <div class="k">Flooded</div>
               <div class="v" id="exposedPct">-</div>
             </div>
             <div class="stat">
@@ -2743,7 +3354,7 @@
 
         <div class="profilePane">
           <div class="chartHeader">
-            <h2 class="chartTitle">Cross Section</h2>
+            <h2 class="chartTitle">Elevation</h2>
             <div class="chartPills">
               <span class="pill" id="thresholdPill">4.28 ft</span>
             </div>
@@ -2755,7 +3366,7 @@
 
       <section class="toolPane floodHistoryPane" id="floodHistoryPane">
         <div class="toolTitleRow">
-          <div class="toolTitle">Flood History <span class="pill" id="floodBucketPill">0.0 ft</span></div>
+          <div class="toolTitle">Flood outlook <span class="pill" id="floodBucketPill">0.0 ft</span></div>
           <button class="expandBtn secondary" type="button" data-expand-pane="floodHistoryPane" aria-controls="floodHistoryPane" aria-expanded="false" aria-label="Expand flood history" title="Expand flood history">+</button>
         </div>
 
@@ -2766,7 +3377,7 @@
             <button data-scenario="high" class="secondary" type="button">High</button>
           </div>
           <div class="tinyChartLabel annualLabel">
-            <span>Flood days by year</span>
+            <span>Flood days</span>
             <div class="chartKey" id="annualFloodKey" aria-label="Flood days by year key"></div>
           </div>
           <div class="tinyChartWrap annualChartWrap"><canvas id="dotAnnualChart"></canvas></div>
@@ -2778,7 +3389,7 @@
         <div class="exportGrid">
           <div class="exportColumn">
             <div class="exportColumnTitle">
-              <span>Saved Lines</span>
+              <span>Saved</span>
               <span class="pill" id="savedLineCount">0</span>
             </div>
             <div class="lineForm">
@@ -2798,7 +3409,7 @@
               <span class="pill">CSV / SHP</span>
             </div>
             <div class="exportActions">
-              <button id="screenshotBtn" type="button">Screenshot (PNG)</button>
+              <button id="screenshotBtn" type="button">PNG image</button>
               <div class="exportFormatRow">
                 <select id="exportFormat" aria-label="Cross section export format">
                   <option value="csv">CSV</option>
@@ -2808,7 +3419,7 @@
                 <button id="exportBtn" class="secondary" type="button">Export</button>
               </div>
             </div>
-            <p class="exportStatus" id="exportStatus">Saved lines remain visible together. Choose CSV, SHP, or both for export.</p>
+            <p class="exportStatus" id="exportStatus" aria-live="polite"></p>
           </div>
         </div>
       </section>
@@ -2961,10 +3572,10 @@
     function chartFontSizes(paneId){
       const expanded = Boolean($("shell")?.classList.contains("paneExpanded") && $(paneId)?.classList.contains("isExpanded"));
       return {
-        tick:expanded ? 15 : 10,
-        title:expanded ? 17 : 11,
-        legend:expanded ? 15 : 11,
-        tooltip:expanded ? 15 : 12,
+        tick:expanded ? 16 : 12,
+        title:expanded ? 18 : 13,
+        legend:expanded ? 16 : 13,
+        tooltip:expanded ? 16 : 13,
         line:expanded ? 3 : 2,
         point:expanded ? 8 : 6
       };
@@ -3105,7 +3716,7 @@
         if(!window.matchMedia("(max-width: 1180px)").matches) return;
         if(performance.now() < navigationLockUntil) return;
         const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 24;
-        let activePane = atPageEnd ? panes.at(-1) : panes[0];
+        let activePane = atPageEnd ? panes[panes.length - 1] : panes[0];
         if(!atPageEnd){
           const anchor = Math.max(92, parseFloat(getComputedStyle(document.documentElement).fontSize) * 5.5);
           panes.forEach(pane => {
@@ -4552,7 +5163,7 @@
       const image = await tiff.getImage();
       const raster = await image.readRasters({ interleave:true });
       state.raster = raster;
-      setReady(true, "DEM ready");
+      setReady(true, "Ready");
       defaultSection();
     }
 
@@ -4654,7 +5265,7 @@
     loadSavedLines();
     loadApp().catch(err => {
       console.error(err);
-      setReady(false, "DEM failed");
+      setReady(false, "Unavailable");
       setText("chartStatus", "DEM failed to load");
     });
   </script>
