@@ -5654,13 +5654,25 @@
     }
 
     function defaultInspectionIndex(profile){
+      const edgeBuffer = profile.length >= 40 ? Math.max(3, Math.floor(profile.length * .02)) : 0;
       let bestIndex = null;
-      for(let i=0; i<profile.length; i++){
-        const p = profile[i];
-        if(!Number.isFinite(p.elevationFt)) continue;
-        if(bestIndex === null || p.elevationFt < profile[bestIndex].elevationFt) bestIndex = i;
+      let bestScore = Infinity;
+      for(let i=edgeBuffer; i<profile.length - edgeBuffer; i++){
+        if(!Number.isFinite(profile[i]?.elevationFt)) continue;
+        const nearby = [];
+        for(let j=Math.max(0, i - 3); j<=Math.min(profile.length - 1, i + 3); j++){
+          if(Number.isFinite(profile[j]?.elevationFt)) nearby.push(profile[j].elevationFt);
+        }
+        if(nearby.length < 3) continue;
+        const score = nearby.reduce((sum, value) => sum + value, 0) / nearby.length;
+        if(score < bestScore || (score === bestScore && profile[i].elevationFt < profile[bestIndex]?.elevationFt)){
+          bestScore = score;
+          bestIndex = i;
+        }
       }
-      return bestIndex;
+      if(bestIndex !== null) return bestIndex;
+      const fallback = profile.findIndex(p => Number.isFinite(p.elevationFt));
+      return fallback >= 0 ? fallback : null;
     }
 
     function selectProfileIndex(index, rerender=false, openPopup=false){
@@ -5768,10 +5780,10 @@
     }
 
     function defaultSection(){
-      // Passaic Street: Hackensack River side to the west side of town.
+      // Passaic Street: west side of town to the Hackensack River side.
       drawSection(
-        L.latLng(40.88959, -74.03985),
         L.latLng(40.90266, -74.06176),
+        L.latLng(40.88959, -74.03985),
         false
       );
     }
