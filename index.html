@@ -3541,6 +3541,75 @@
       }
     }
 
+    /* Separate measured history from modeled outlook. */
+    .outlookChartsGrid{
+      display:grid;
+      gap:10px;
+      flex:1 1 auto;
+      min-width:0;
+      min-height:0;
+    }
+
+    .outlookChartCard{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      min-width:0;
+      min-height:205px;
+      padding:10px;
+      border:1px solid rgba(148,163,184,.18);
+      border-radius:13px;
+      background:rgba(2,6,23,.28);
+      overflow:hidden;
+    }
+
+    .observedOutlookCard{border-top:2px solid rgba(34,211,238,.72)}
+    .projectedOutlookCard{border-top:2px solid rgba(251,191,36,.78)}
+
+    .outlookChartHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      min-width:0;
+    }
+
+    .outlookChartHeader > div:first-child{min-width:0}
+
+    .outlookChartHeader h2{
+      margin:0;
+      color:#f4f8ff;
+      font-size:14px;
+      line-height:1.15;
+      letter-spacing:-.01em;
+    }
+
+    .outlookChartHeader p{
+      margin:3px 0 0;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:750;
+      line-height:1.25;
+    }
+
+    .outlookChartKey{
+      flex:0 0 auto;
+      justify-content:flex-end;
+    }
+
+    .outlookChartKey .keyToggle{
+      min-height:28px;
+      padding:4px 7px;
+      font-size:10px;
+    }
+
+    .outlookChartWrap{
+      flex:1 1 160px;
+      width:100%;
+      height:170px;
+      min-height:150px;
+    }
+
     /* Keep the desktop tool rail inside Safari/macOS viewports. */
     @media (min-width:1181px){
       .rightStack{
@@ -3589,8 +3658,10 @@
       .shell:not(.paneExpanded) .toolPane{
         display:none;
         width:100%;
-        height:100%;
+        height:auto;
+        max-height:100%;
         min-height:0;
+        align-self:start;
         overflow:auto;
         overscroll-behavior:contain;
         -webkit-overflow-scrolling:touch;
@@ -3598,6 +3669,51 @@
 
       .shell:not(.paneExpanded) .toolPane.isWorkspaceActive{
         display:flex;
+      }
+
+      .shell:not(.paneExpanded) .crossSectionPane .profilePane{
+        flex:0 0 auto;
+      }
+
+      .shell:not(.paneExpanded) .crossSectionPane .chartWrap{
+        flex:0 0 clamp(230px,34vh,340px);
+        height:clamp(230px,34vh,340px);
+        min-height:230px;
+        max-height:340px;
+      }
+
+      .shell:not(.paneExpanded) .floodHistoryPane .floodPane{
+        flex:0 0 auto;
+        overflow:visible;
+      }
+
+      .shell:not(.paneExpanded) .outlookChartsGrid{
+        grid-template-rows:repeat(2,minmax(205px,235px));
+        flex:0 0 auto;
+      }
+
+      .shell:not(.paneExpanded) .outlookChartWrap{
+        flex:1 1 150px;
+        height:155px;
+        min-height:145px;
+        max-height:175px;
+      }
+
+      .shell.paneExpanded .floodHistoryPane .floodPane{
+        grid-template-rows:auto minmax(0,1fr) auto;
+      }
+
+      .shell.paneExpanded .outlookChartsGrid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+
+      .shell.paneExpanded .outlookChartCard{
+        min-height:0;
+      }
+
+      .shell.paneExpanded .outlookChartWrap{
+        height:auto;
+        min-height:0;
       }
 
       .toolPane,
@@ -3613,17 +3729,32 @@
 
       .toolTitle{white-space:normal}
 
-      #annualFloodKey{
+      #observedFloodKey,
+      #projectedFloodKey{
         display:grid;
-        grid-template-columns:repeat(3,minmax(0,1fr));
-        width:100%;
+        grid-template-columns:repeat(2,minmax(0,1fr));
       }
 
-      #annualFloodKey .keyToggle{
+      #observedFloodKey .keyToggle,
+      #projectedFloodKey .keyToggle{
         min-width:0;
-        width:100%;
         overflow:hidden;
       }
+    }
+
+    @media (max-width:620px){
+      .outlookChartHeader{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+
+      .outlookChartKey{
+        justify-content:flex-start;
+      }
+
+      .outlookChartHeader h2{font-size:16px}
+      .outlookChartHeader p{font-size:11px}
+      .outlookChartCard{padding:11px}
     }
 
     #profileChart{touch-action:pan-y}
@@ -3769,11 +3900,28 @@
             <button data-scenario="intermediate" class="active" type="button">Intermediate</button>
             <button data-scenario="high" class="secondary" type="button">High</button>
           </div>
-          <div class="tinyChartLabel annualLabel">
-            <span>Flood Days</span>
-            <div class="chartKey" id="annualFloodKey" aria-label="Flood Days by Year key"></div>
+          <div class="outlookChartsGrid">
+            <section class="outlookChartCard observedOutlookCard" aria-labelledby="observedOutlookTitle">
+              <div class="outlookChartHeader">
+                <div>
+                  <h2 id="observedOutlookTitle">Observed History</h2>
+                  <p>Measured Flood Days by Year</p>
+                </div>
+                <div class="chartKey outlookChartKey" id="observedFloodKey" aria-label="Observed history key"></div>
+              </div>
+              <div class="tinyChartWrap outlookChartWrap observedChartWrap"><canvas id="observedAnnualChart"></canvas></div>
+            </section>
+            <section class="outlookChartCard projectedOutlookCard" id="projectedOutlookCard" aria-labelledby="projectedOutlookTitle">
+              <div class="outlookChartHeader">
+                <div>
+                  <h2 id="projectedOutlookTitle">Projected Outlook</h2>
+                  <p>Scenario Flood Days through 2100</p>
+                </div>
+                <div class="chartKey outlookChartKey" id="projectedFloodKey" aria-label="Projected outlook key"></div>
+              </div>
+              <div class="tinyChartWrap outlookChartWrap projectedChartWrap"><canvas id="projectedAnnualChart"></canvas></div>
+            </section>
           </div>
-          <div class="tinyChartWrap annualChartWrap"><canvas id="dotAnnualChart"></canvas></div>
           <p class="modelNote" id="projectionNote"></p>
         </aside>
       </section>
@@ -3880,7 +4028,8 @@
       inspectMarker:null,
       profile:[],
       chart:null,
-      annualFloodChart:null,
+      observedAnnualChart:null,
+      projectedAnnualChart:null,
       floodBucketCache:new Map(),
       hillshadeOverlay:null,
       savedLines:[],
@@ -4078,7 +4227,8 @@
 
     function resizeCharts(){
       state.chart?.resize();
-      state.annualFloodChart?.resize();
+      state.observedAnnualChart?.resize();
+      state.projectedAnnualChart?.resize();
     }
 
     function updateHillshadeOpacity(){
@@ -4194,7 +4344,7 @@
       outlook:{
         title:"Flood Outlook",
         tourStep:7,
-        body:`<p>This pane asks a practical question: <strong>how often has water reached the selected road elevation, and how could that frequency change?</strong> The pill beside the title is the elevation currently being evaluated.</p><p>Observed bars come from the daily water-level archive. Low, Intermediate, and High are long-term sea-level pathways—not weather forecasts. The shaded <strong>Uncertainty</strong> area communicates a range; the solid yellow line is the central projection for the selected pathway.</p>`
+        body:`<p>This pane asks a practical question: <strong>how often has water reached the selected road elevation, and how could that frequency change?</strong> The pill beside the title is the elevation currently being evaluated.</p><p><strong>Observed History</strong> has its own graph using the measured archive. <strong>Projected Outlook</strong> is separate so historical variability is never confused with a scenario. Low, Intermediate, and High are long-term sea-level pathways—not weather forecasts. The shaded <strong>Uncertainty</strong> area is a range; the solid yellow line is the central projection.</p>`
       },
       export:{
         title:"Save & Export",
@@ -4250,9 +4400,9 @@
         body:`<p><strong>Low, Intermediate, and High</strong> represent different long-term sea-level-rise pathways. They are planning scenarios, not confidence grades and not predictions of tomorrow's tide.</p><p>Use Intermediate as a middle planning case, then compare Low and High to see whether the decision changes across a reasonable range of futures.</p>`
       },
       {
-        title:"Read history and projection together",
-        target:".annualChartWrap",
-        body:`<p>Cyan bars are observed Flood Days by Year. The shaded gold Uncertainty area shows the future range for the active pathway, and the solid yellow line is its central projection.</p><p>Turn items on or off in the key when the chart feels busy. Focus on direction and scale: the important signal is how quickly exceedance days grow for the road elevation you selected.</p>`
+        title:"Compare history with projection",
+        target:".outlookChartsGrid",
+        body:`<p>The two graphs deliberately keep evidence and scenario apart. <strong>Observed History</strong> uses cyan bars for measured Flood Days by Year. <strong>Projected Outlook</strong> uses a shaded gold Uncertainty range and a solid yellow central projection.</p><p>Read the observed graph first to understand recent variability, then use the projected graph to compare the direction and scale of change under the selected pathway.</p>`
       },
       {
         title:"Save profiles for comparison",
@@ -5179,54 +5329,92 @@
       resizeCharts();
     }
 
-    function renderAnnualFloodChart(bucketStats){
-      const canvas = $("dotAnnualChart");
+    function annualFloodScales(fonts){
+      return {
+        x:{
+          ticks:{ color:"#9fb0d1", maxRotation:0, autoSkip:true, maxTicksLimit:6, font:{ size:fonts.tick, weight:"700" } },
+          grid:{ display:false },
+          title:{ display:true, text:"Year", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
+        },
+        y:{
+          beginAtZero:true,
+          ticks:{ color:"#9fb0d1", precision:0, maxTicksLimit:4, font:{ size:fonts.tick, weight:"700" } },
+          grid:{ color:"rgba(148,163,184,.12)" },
+          title:{ display:true, text:"Flood Days", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
+        }
+      };
+    }
+
+    function renderObservedFloodChart(bucketStats){
+      const canvas = $("observedAnnualChart");
       if(!canvas) return;
       const fonts = chartFontSizes("floodHistoryPane");
-      const labels = bucketStats
-        ? [
-            ...bucketStats.annualRows.map(row => row.year),
-            ...bucketStats.future.map(row => row.year)
-          ]
-        : [];
-      const historicalLength = bucketStats?.annualRows?.length || 0;
-      const observed = bucketStats ? [
-        ...bucketStats.annualRows.map(row => row.count),
-        ...bucketStats.future.map(() => null)
-      ] : [];
-      const low = bucketStats ? [
-        ...bucketStats.annualRows.map(() => null),
-        ...bucketStats.future.map(row => row.low)
-      ] : [];
-      const high = bucketStats ? [
-        ...bucketStats.annualRows.map(() => null),
-        ...bucketStats.future.map(row => row.high)
-      ] : [];
-      const mean = bucketStats ? [
-        ...bucketStats.annualRows.map(() => null),
-        ...bucketStats.future.map(row => row.mean)
-      ] : [];
-
+      const labels = bucketStats ? bucketStats.annualRows.map(row => row.year) : [];
+      const observed = bucketStats ? bucketStats.annualRows.map(row => row.count) : [];
       const config = {
         type:"bar",
         data:{
           labels,
+          datasets:[{
+            label:"Observed",
+            data:observed,
+            legendColor:"rgba(34,211,238,.82)",
+            backgroundColor:"rgba(34,211,238,.72)",
+            borderColor:"rgba(125,211,252,.96)",
+            borderWidth:1,
+            borderRadius:2
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          animation:false,
+          interaction:{mode:"index", intersect:false},
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              titleFont:{size:fonts.tooltip,weight:"800"},
+              bodyFont:{size:fonts.tooltip},
+              callbacks:{
+                label(ctx){
+                  const value = ctx.parsed?.y;
+                  return Number.isFinite(value) ? `Observed: ${fmtFlood(value,0)} Flood Days` : null;
+                }
+              }
+            }
+          },
+          scales:annualFloodScales(fonts)
+        }
+      };
+      if(state.observedAnnualChart){
+        const visibility = chartVisibility(state.observedAnnualChart);
+        state.observedAnnualChart.data = config.data;
+        state.observedAnnualChart.options = config.options;
+        restoreChartVisibility(state.observedAnnualChart, visibility);
+        state.observedAnnualChart.update("none");
+      }else{
+        state.observedAnnualChart = new Chart(canvas, config);
+      }
+      renderChartKey(state.observedAnnualChart, "observedFloodKey");
+    }
+
+    function renderProjectedFloodChart(bucketStats){
+      const canvas = $("projectedAnnualChart");
+      if(!canvas) return;
+      const fonts = chartFontSizes("floodHistoryPane");
+      const labels = bucketStats ? bucketStats.future.map(row => row.year) : [];
+      const low = bucketStats ? bucketStats.future.map(row => row.low) : [];
+      const high = bucketStats ? bucketStats.future.map(row => row.high) : [];
+      const mean = bucketStats ? bucketStats.future.map(row => row.mean) : [];
+      const config = {
+        type:"line",
+        data:{
+          labels,
           datasets:[
             {
-              type:"bar",
-              label:"Observed",
-              data:observed,
-              legendColor:"rgba(34,211,238,.82)",
-              backgroundColor:"rgba(34,211,238,.72)",
-              borderColor:"rgba(125,211,252,.96)",
-              borderWidth:1,
-              order:20
-            },
-            {
-              type:"line",
-              label:"Forecast low",
+              label:"Projection low",
               legendHidden:true,
-              legendGroup:"annualForecastRange",
+              legendGroup:"projectedRange",
               data:low,
               borderWidth:0,
               pointRadius:0,
@@ -5236,10 +5424,9 @@
               order:12
             },
             {
-              type:"line",
               label:"Uncertainty",
               keyLabel:"Uncertainty",
-              legendGroup:"annualForecastRange",
+              legendGroup:"projectedRange",
               data:high,
               legendColor:"rgba(251,191,36,.46)",
               borderWidth:0,
@@ -5250,13 +5437,12 @@
               order:11
             },
             {
-              type:"line",
               label:"Projection",
               data:mean,
               legendColor:"rgba(251,191,36,.96)",
               borderColor:"rgba(251,191,36,.96)",
               backgroundColor:"rgba(251,191,36,.96)",
-              borderWidth:Math.max(3, fonts.line),
+              borderWidth:Math.max(3,fonts.line),
               pointRadius:0,
               pointHitRadius:8,
               tension:.2,
@@ -5269,57 +5455,45 @@
           responsive:true,
           maintainAspectRatio:false,
           animation:false,
-          interaction:{mode:"index", intersect:false},
+          interaction:{mode:"index",intersect:false},
           plugins:{
-            legend:{ display:false },
+            legend:{display:false},
             tooltip:{
-              titleFont:{ size:fonts.tooltip, weight:"800" },
-              bodyFont:{ size:fonts.tooltip },
+              titleFont:{size:fonts.tooltip,weight:"800"},
+              bodyFont:{size:fonts.tooltip},
               callbacks:{
                 label(ctx){
-                  const v = ctx.parsed?.y;
-                  if(!Number.isFinite(v)) return null;
-                  if(ctx.dataset.label === "Forecast low") return null;
+                  const value = ctx.parsed?.y;
+                  if(!Number.isFinite(value) || ctx.dataset.label === "Projection low") return null;
                   if(ctx.dataset.label === "Uncertainty"){
                     const lowValue = low[ctx.dataIndex];
                     return Number.isFinite(lowValue)
-                      ? `Uncertainty: ${fmtFlood(lowValue, 0)} - ${fmtFlood(v, 0)} Flood Days`
+                      ? `Uncertainty: ${fmtFlood(lowValue,0)} - ${fmtFlood(value,0)} Flood Days`
                       : null;
                   }
-                  if(ctx.dataset.label === "Projection"){
-                    return `${bucketStats?.scenarioShort || "Scenario"} Projection: ${fmtFlood(v, ctx.dataIndex >= historicalLength ? 1 : 0)} Flood Days`;
-                  }
-                  return `${ctx.dataset.label}: ${fmtFlood(v, ctx.dataIndex >= historicalLength ? 1 : 0)} Flood Days`;
+                  return `${bucketStats?.scenarioShort || "Scenario"} Projection: ${fmtFlood(value,1)} Flood Days`;
                 }
               }
             }
           },
-          scales:{
-            x:{
-              ticks:{ color:"#9fb0d1", maxRotation:0, autoSkip:true, maxTicksLimit:6, font:{ size:fonts.tick, weight:"700" } },
-              grid:{ display:false },
-              title:{ display:true, text:"Year", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
-            },
-            y:{
-              beginAtZero:true,
-              ticks:{ color:"#9fb0d1", precision:0, maxTicksLimit:4, font:{ size:fonts.tick, weight:"700" } },
-              grid:{ color:"rgba(148,163,184,.12)" },
-              title:{ display:true, text:"Flood Days", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
-            }
-          }
+          scales:annualFloodScales(fonts)
         }
       };
-
-      if(state.annualFloodChart){
-        const visibility = chartVisibility(state.annualFloodChart);
-        state.annualFloodChart.data = config.data;
-        state.annualFloodChart.options = config.options;
-        restoreChartVisibility(state.annualFloodChart, visibility);
-        state.annualFloodChart.update("none");
+      if(state.projectedAnnualChart){
+        const visibility = chartVisibility(state.projectedAnnualChart);
+        state.projectedAnnualChart.data = config.data;
+        state.projectedAnnualChart.options = config.options;
+        restoreChartVisibility(state.projectedAnnualChart, visibility);
+        state.projectedAnnualChart.update("none");
       }else{
-        state.annualFloodChart = new Chart(canvas, config);
+        state.projectedAnnualChart = new Chart(canvas, config);
       }
-      renderChartKey(state.annualFloodChart, "annualFloodKey");
+      renderChartKey(state.projectedAnnualChart, "projectedFloodKey");
+    }
+
+    function renderAnnualFloodCharts(bucketStats){
+      renderObservedFloodChart(bucketStats);
+      renderProjectedFloodChart(bucketStats);
       resizeCharts();
     }
 
@@ -5331,7 +5505,7 @@
         setText("floodOutlook", "-");
         setText("annualFloodMeta", "Archive");
         setText("projectionNote", "");
-        renderAnnualFloodChart(null);
+        renderAnnualFloodCharts(null);
         return null;
       }
 
@@ -5340,7 +5514,7 @@
       setText("floodOutlook", bucketStats.projection2100 ? fmtFlood(bucketStats.projection2100.mean, 1) : "-");
       setText("annualFloodMeta", `${bucketStats.firstYear}-2100`);
       setText("projectionNote", "");
-      renderAnnualFloodChart(bucketStats);
+      renderAnnualFloodCharts(bucketStats);
       return bucketStats;
     }
 
