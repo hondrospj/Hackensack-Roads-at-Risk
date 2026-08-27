@@ -844,7 +844,7 @@
     .popupStats strong{color:#f8fafc}
     .popupStats .tiny{color:#aab8ce;font-size:11px}
 
-    @media (max-width: 980px){
+    @media (max-width: 1180px){
       html,body{overflow:auto;height:auto;min-height:100%}
       #map{position:relative;height:58vh;min-height:420px}
       .shell{
@@ -1613,7 +1613,7 @@
       gap:10px;
     }
 
-    @media (max-height: 760px) and (min-width: 981px){
+    @media (max-height: 760px) and (min-width: 1181px){
       .mapControl{padding:8px}
       .pointStrip{display:none}
       .metricRows{grid-template-columns:1fr 1fr}
@@ -1639,7 +1639,7 @@
       .savedLine button{min-height:18px;padding:2px 5px}
     }
 
-    @media (max-width: 980px){
+    @media (max-width: 1180px){
       #map{
         position:relative;
         inset:auto;
@@ -1936,7 +1936,7 @@
       outline-offset:2px;
     }
 
-    @media (max-width: 980px){
+    @media (max-width: 1180px){
       html,
       body{
         width:100%;
@@ -2388,7 +2388,7 @@
       }
     }
 
-    @media (max-width: 980px) and (max-height: 520px){
+    @media (max-width: 1180px) and (max-height: 520px){
       #map{
         height:56vh;
         height:56svh;
@@ -2433,6 +2433,215 @@
       }
     }
 
++
+    /* Unified tablet/mobile workspace: readable cards, no rail collisions. */
+    @media (max-width: 1180px){
+      body{
+        background:#07111f;
+      }
+
+      #map{
+        height:48svh;
+        min-height:320px;
+        max-height:520px;
+        border-bottom:1px solid var(--line-strong);
+      }
+
+      .shell{
+        gap:12px;
+        padding:12px max(12px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        background:linear-gradient(180deg,#07111f 0%,#0b1220 100%);
+      }
+
+      .titleBar,
+      .mapControl,
+      .rightStack{
+        width:min(100%, 960px);
+        margin-inline:auto;
+      }
+
+      .titleBar,
+      .panelBlock,
+      .toolPane,
+      .mobileToolNav{
+        border-radius:16px;
+        background:#111a2a;
+        backdrop-filter:none;
+        -webkit-backdrop-filter:none;
+        box-shadow:0 12px 30px rgba(0,0,0,.24);
+      }
+
+      .titleBar{
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        align-items:center;
+        gap:12px;
+      }
+
+      .titleBar h1{
+        white-space:normal;
+        overflow-wrap:anywhere;
+      }
+
+      .mapModes{
+        gap:8px;
+      }
+
+      .mapModes button{
+        min-height:44px;
+        font-size:13px;
+      }
+
+      .rightStack,
+      .toolPane,
+      .crossSectionPane,
+      .floodHistoryPane,
+      .exportPane{
+        min-height:0;
+      }
+
+      .toolPane{
+        padding:14px;
+        overflow:hidden;
+      }
+
+      .toolTitleRow{
+        width:100%;
+        min-width:0;
+      }
+
+      .crossSectionPane .toolTitleRow{
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        align-items:center;
+        gap:10px;
+      }
+
+      .crossSectionPane .toolTitle{
+        min-width:0;
+        grid-template-columns:auto minmax(116px,142px);
+      }
+
+      .crossSectionPane .paneActions{
+        width:auto;
+        grid-template-columns:auto 44px;
+      }
+
+      .compactStats{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+
+      .compactStats .stat{
+        min-width:0;
+        overflow:hidden;
+      }
+
+      .compactStats .stat .v{
+        font-size:clamp(16px,2.3vw,22px);
+        overflow-wrap:anywhere;
+      }
+
+      .thresholdCompact{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+
+      .profilePane,
+      .floodPane{
+        width:100%;
+        min-width:0;
+      }
+
+      .chartHeader,
+      .chartKey,
+      .tinyChartLabel{
+        flex-wrap:wrap;
+      }
+
+      .chartWrap{
+        height:clamp(280px,35vw,360px);
+        min-height:280px;
+      }
+
+      .tinyChartWrap{
+        height:clamp(230px,30vw,310px);
+        min-height:230px;
+      }
+
+      .exportGrid{
+        height:auto;
+      }
+
+      button, input, select, .keyToggle{
+        touch-action:manipulation;
+      }
+    }
+
+    @media (min-width:700px) and (max-width:1180px){
+      .exportGrid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:620px){
+      #map{
+        height:42svh;
+        min-height:280px;
+      }
+
+      .shell{
+        padding-inline:10px;
+      }
+
+      .titleBar{
+        min-height:66px;
+        padding:10px 12px;
+      }
+
+      .titleBar h1{
+        font-size:clamp(22px,7vw,28px);
+      }
+
+      .badge{
+        max-width:112px;
+        text-align:center;
+      }
+
+      .mapModes{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+
+      .crossSectionPane .toolTitleRow{
+        grid-template-columns:1fr;
+      }
+
+      .crossSectionPane .paneActions{
+        width:100%;
+        grid-template-columns:minmax(0,1fr) 44px;
+      }
+
+      .compactStats .stat{
+        min-height:66px;
+        padding:9px 8px;
+      }
+
+      .compactStats .stat .k{
+        font-size:10px;
+      }
+
+      .compactStats .stat .v{
+        font-size:clamp(14px,4.2vw,18px);
+      }
+
+      .chartWrap{
+        height:270px;
+        min-height:270px;
+      }
+
+      .tinyChartWrap{
+        height:220px;
+        min-height:220px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2472,7 +2681,6 @@
       </nav>
 
       <section class="toolPane crossSectionPane" id="crossSectionPane">
-        <div class="toolTitleRow">
         <div class="toolTitleRow">
           <div class="toolTitle">
             Cross Section
@@ -2894,7 +3102,7 @@
       let navigationFrame = 0;
       const syncActiveSection = () => {
         navigationFrame = 0;
-        if(!window.matchMedia("(max-width: 980px)").matches) return;
+        if(!window.matchMedia("(max-width: 1180px)").matches) return;
         if(performance.now() < navigationLockUntil) return;
         const atPageEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 24;
         let activePane = atPageEnd ? panes.at(-1) : panes[0];
@@ -3719,7 +3927,7 @@
     }
 
     function inspectIcon(){
-      const size = window.matchMedia("(max-width: 980px)").matches ? 36 : 22;
+      const size = window.matchMedia("(max-width: 1180px)").matches ? 36 : 22;
       return L.divIcon({
         className:"",
         html:"<div class='inspectMarker'></div>",
@@ -3868,7 +4076,7 @@
     }
 
     function markerIcon(){
-      const size = window.matchMedia("(max-width: 980px)").matches ? 32 : 18;
+      const size = window.matchMedia("(max-width: 1180px)").matches ? 32 : 18;
       return L.divIcon({
         className:"",
         html:"<div class='sectionMarker'></div>",
@@ -4351,7 +4559,7 @@
     $("drawBtn").addEventListener("click", () => {
       const next = !state.drawMode;
       setDrawMode(next);
-      if(next && window.matchMedia("(max-width: 980px)").matches){
+      if(next && window.matchMedia("(max-width: 1180px)").matches){
         if($("shell").classList.contains("paneExpanded")) togglePaneExpansion("crossSectionPane");
         window.setTimeout(() => $("map").scrollIntoView({ behavior:"smooth", block:"start" }), 80);
       }
@@ -4430,7 +4638,7 @@
       const [a,b] = state.pendingPoints;
       setDrawMode(false);
       drawSection(a,b);
-      if(window.matchMedia("(max-width: 980px)").matches){
+      if(window.matchMedia("(max-width: 1180px)").matches){
         window.setTimeout(() => $("crossSectionPane").scrollIntoView({ behavior:"smooth", block:"start" }), 120);
       }
     });
