@@ -823,6 +823,25 @@
       background:#7dd3fc;
       border:3px solid #082f49;
       box-shadow:0 0 0 3px rgba(125,211,252,.35);
+      position:relative;
+    }
+
+    .sectionMarkerLabel{
+      position:absolute;
+      left:50%;
+      bottom:calc(100% + 7px);
+      transform:translateX(-50%);
+      padding:3px 7px;
+      border:1px solid rgba(191,219,254,.7);
+      border-radius:8px;
+      background:rgba(11,18,32,.94);
+      color:#f8fafc;
+      font-size:14px;
+      font-weight:900;
+      line-height:1;
+      white-space:nowrap;
+      box-shadow:0 4px 14px rgba(2,6,23,.4);
+      pointer-events:none;
     }
 
     .inspectMarker{
@@ -5112,7 +5131,7 @@
       const currentMin = Number.isFinite(startRange?.min) ? startRange.min : fullMin;
       const currentMax = Number.isFinite(startRange?.max) ? startRange.max : fullMax;
       const currentSpan = Math.max(1, currentMax - currentMin);
-      const nextSpan = clamp(currentSpan * factor, Math.min(8, fullMax), fullMax);
+      const nextSpan = clamp(currentSpan * factor, Math.min(2, fullMax), fullMax);
       const centerRatio = clamp((center - currentMin) / currentSpan, 0, 1);
       let nextMin = center - nextSpan * centerRatio;
       let nextMax = nextMin + nextSpan;
@@ -5178,7 +5197,7 @@
       if(event.ctrlKey || event.metaKey){
         const xScale = state.chart.scales.x;
         const center = xScale?.getValueForPixel(event.offsetX);
-        setProfileXZoom(center, event.deltaY < 0 ? .82 : 1.18);
+        setProfileXZoom(center, event.deltaY < 0 ? .72 : 1.25);
         return;
       }
       const yScale = state.chart.scales.y;
@@ -5310,7 +5329,7 @@
               max:state.profileXZoom?.max,
               ticks:{ color:"#9fb0d1", maxTicksLimit:9, font:{ size:fonts.tick, weight:"700" } },
               grid:{ color:"rgba(148,163,184,.12)" },
-              title:{ display:true, text:"Distance Along Section (ft)", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
+              title:{ display:true, text:"A → A′ · Distance Along Section (ft)", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
             },
             y:{
               min:yRange.min,
@@ -5673,11 +5692,11 @@
       setText("chartStatus", "Waiting for a line");
     }
 
-    function markerIcon(){
+    function markerIcon(label=""){
       const size = window.matchMedia("(max-width: 1180px)").matches ? 32 : 18;
       return L.divIcon({
         className:"",
-        html:"<div class='sectionMarker'></div>",
+        html:`<div class="sectionMarker">${label ? `<span class="sectionMarkerLabel">${label}</span>` : ""}</div>`,
         iconSize:[size,size],
         iconAnchor:[size / 2,size / 2]
       });
@@ -5688,8 +5707,8 @@
       state.activeSavedLineId = savedLineId;
       renderSavedLines();
       state.markers = [
-        L.marker(a, { icon:markerIcon(), draggable:true, zIndexOffset:2000, title:"Section endpoint" }).addTo(map),
-        L.marker(b, { icon:markerIcon(), draggable:true, zIndexOffset:2000, title:"Section endpoint" }).addTo(map)
+        L.marker(a, { icon:markerIcon("A"), draggable:true, zIndexOffset:2000, title:"Section endpoint A" }).addTo(map),
+        L.marker(b, { icon:markerIcon("A′"), draggable:true, zIndexOffset:2000, title:"Section endpoint A prime" }).addTo(map)
       ];
       state.line = L.polyline([a, b], {
         color:"#38bdf8",
@@ -6260,7 +6279,7 @@
       state.pendingPoints.push(event.latlng);
       if(state.pendingPoints.length === 1){
         state.markers.forEach(m => map.removeLayer(m));
-        state.markers = [L.marker(event.latlng, { icon:markerIcon() }).addTo(map)];
+        state.markers = [L.marker(event.latlng, { icon:markerIcon("A"), title:"Section endpoint A" }).addTo(map)];
         setText("chartStatus", "Choose endpoint");
         setText("drawPromptText", "Tap the map once more to choose the second point.");
         return;
