@@ -5087,7 +5087,10 @@
         max += .25;
       }
       const pad = Math.max(.25, (max - min) * .12);
-      return { min:min - pad, max:max + pad };
+      let roundedMin = Math.floor(min - pad);
+      let roundedMax = Math.ceil(max + pad);
+      if(roundedMax <= roundedMin) roundedMax = roundedMin + 1;
+      return { min:roundedMin, max:roundedMax };
     }
 
     function applyProfileZoom(chart){
@@ -5203,6 +5206,9 @@
         nextMax = limitMax;
         nextMin = nextMax - nextSpan;
       }
+      nextMin = Math.floor(nextMin);
+      nextMax = Math.ceil(nextMax);
+      if(nextMax <= nextMin) nextMax = nextMin + 1;
       state.profileYZoom = { min:nextMin, max:nextMax };
       applyProfileZoom(state.chart);
       state.chart.update("none");
@@ -5309,7 +5315,7 @@
             y:{
               min:yRange.min,
               max:yRange.max,
-              ticks:{ color:"#9fb0d1", font:{ size:fonts.tick, weight:"700" } },
+              ticks:{ color:"#9fb0d1", precision:0, maxTicksLimit:7, font:{ size:fonts.tick, weight:"700" } },
               grid:{ color:"rgba(148,163,184,.14)" },
               title:{ display:true, text:`Elevation (ft ${datumLabel()})`, color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
             }
