@@ -1901,7 +1901,7 @@
     }
 
     .sectionMarker{
-      background:var(--accent);
+      background:var(--section-color,var(--accent));
       border-color:#172554;
       box-shadow:0 0 0 3px rgba(96,165,250,.35);
     }
@@ -2873,7 +2873,7 @@
 
     #profileChartKey{
       display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(112px,1fr));
     }
 
     .keyToggle{
@@ -4044,6 +4044,11 @@
       riskLine:null,
       savedLineLayers:null,
       activeSavedLineId:null,
+      comparisonSections:[],
+      activeEndpointLabels:null,
+      activeSectionColor:"#22d3ee",
+      nextEndpointNumber:1,
+      pendingMarker:null,
       inspectMarker:null,
       profile:[],
       chart:null,
@@ -4120,6 +4125,7 @@
 
     const hillshadeLayerGroup = L.layerGroup().addTo(map);
     const savedLineLayerGroup = L.layerGroup().addTo(map);
+    const comparisonLayerGroup = L.layerGroup().addTo(map);
     state.savedLineLayers = new Map();
 
     function $(id){ return document.getElementById(id); }
@@ -4358,7 +4364,7 @@
       profile:{
         title:"Road Profile",
         tourStep:2,
-        body:`<p>Press <strong>Draw</strong>, choose two endpoints, and the app samples ground elevation along that line. Drag either endpoint to refine the route. The summary reports the lowest sampled elevation, the share of the line at or below your water level, and its total length.</p><p>Use NAVD88 for surveyed land elevations or MLLW for a tide-based reference. Pick a Minor, Moderate, or Major stage—or type an exact level and press Apply. The chart then shows where the road stays above water and where it falls below your chosen threshold.</p>`
+        body:`<p>Press <strong>Draw</strong> and choose two endpoints. The first profile is numbered <strong>1–2</strong>, the next <strong>3–4</strong>, and so on; the same numbers appear on the map and graph. Draw again to keep the earlier profile visible and add another comparison line.</p><p>Drag the newest line's endpoints to refine it. The summary and pink exposure layer describe that active line. Use NAVD88 or MLLW, then choose a flood stage or enter an exact water level to test every displayed profile against the same scenario.</p>`
       },
       outlook:{
         title:"Flood Outlook",
@@ -4386,7 +4392,7 @@
       {
         title:"Draw the road you care about",
         target:"#drawBtn",
-        body:`<p>Press <strong>Draw</strong>, then choose the start and end of the road segment. The app samples the elevation model between those points and builds a profile automatically.</p><p>Drag either blue endpoint when you want to follow a different block or crossing. If the line leaves the available elevation surface, the chart may contain a gap—that is missing coverage, not zero elevation.</p>`
+        body:`<p>Press <strong>Draw</strong>, then choose two endpoints. They are numbered in order—<strong>1–2</strong>, then <strong>3–4</strong>, then <strong>5–6</strong>—and those same numbers label the map and graph.</p><p>Draw again to compare another road without losing the first. The newest line remains editable; drag its endpoints to refine it. A chart gap means the line left the available elevation surface, not that elevation fell to zero.</p>`
       },
       {
         title:"Read the three headline numbers",
@@ -5093,7 +5099,11 @@
     }
 
     function profileDisplayRange(profile){
-      const values = profile
+      const profiles = [
+        ...state.comparisonSections.map(section => section.profile || []),
+        profile || []
+      ];
+      const values = profiles.flat()
         .map(p => toDisplayDatum(p.elevationFt))
         .filter(Number.isFinite);
       const threshold = toDisplayDatum(state.thresholdFt);
@@ -5112,6 +5122,14 @@
       return { min:roundedMin, max:roundedMax };
     }
 
+    function profileDisplayXMax(profile=state.profile){
+      const profiles = [
+        ...state.comparisonSections.map(section => section.profile || []),
+        profile || []
+      ];
+      return Math.max(1, ...profiles.flat().map(point => Number(point.distanceFt) || 0));
+    }
+
     function applyProfileZoom(chart){
       if(!chart) return;
       if(state.profileYZoom){
@@ -5127,11 +5145,11 @@
     function setProfileXZoom(center, factor, startRange=state.profileXZoom){
       if(!state.chart || state.profile.length < 2 || !Number.isFinite(center) || !Number.isFinite(factor)) return;
       const fullMin = 0;
-      const fullMax = state.profile.length - 1;
+      const fullMax = profileDisplayXMax();
       const currentMin = Number.isFinite(startRange?.min) ? startRange.min : fullMin;
       const currentMax = Number.isFinite(startRange?.max) ? startRange.max : fullMax;
       const currentSpan = Math.max(1, currentMax - currentMin);
-      const nextSpan = clamp(currentSpan * factor, Math.min(2, fullMax), fullMax);
+      const nextSpan = clamp(currentSpan * factor, Math.min(Math.max(5, fullMax * .005), fullMax), fullMax);
       const centerRatio = clamp((center - currentMin) / currentSpan, 0, 1);
       let nextMin = center - nextSpan * centerRatio;
       let nextMax = nextMin + nextSpan;
@@ -5233,33 +5251,88 @@
       state.chart.update("none");
     }
 
+    const profileEndpointLabelsPlugin = {
+      id:"profileEndpointLabels",
+      afterDatasetsDraw(chart){
+        const { ctx, chartArea } = chart;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          if(!dataset.endpointLabels || !chart.isDatasetVisible(datasetIndex)) return;
+          const points = chart.getDatasetMeta(datasetIndex).data.filter(point => !point.skip);
+          if(!points.length) return;
+          const endpoints = [
+            { point:points[0], label:dataset.endpointLabels[0] },
+            { point:points[points.length - 1], label:dataset.endpointLabels[1] }
+          ];
+          ctx.save();
+          ctx.font='900 11px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif';
+          ctx.textAlign="center";
+          ctx.textBaseline="middle";
+          for(const endpoint of endpoints){
+            const { x, y } = endpoint.point;
+            if(x < chartArea.left - 2 || x > chartArea.right + 2 || y < chartArea.top - 2 || y > chartArea.bottom + 2) continue;
+            ctx.beginPath();
+            ctx.arc(x, y, 10, 0, Math.PI * 2);
+            ctx.fillStyle=dataset.borderColor || "#22d3ee";
+            ctx.fill();
+            ctx.lineWidth=2;
+            ctx.strokeStyle="#07111f";
+            ctx.stroke();
+            ctx.fillStyle="#07111f";
+            ctx.fillText(String(endpoint.label), x, y + .5);
+          }
+          ctx.restore();
+        });
+      }
+    };
+
     function renderChart(profile){
       const ctx = $("profileChart");
-      const valid = profile.filter(p => Number.isFinite(p.elevationFt));
-      const labels = profile.map(p => Math.round(p.distanceFt));
-      const data = profile.map(p => Number.isFinite(p.elevationFt) ? toDisplayDatum(p.elevationFt) : null);
-      const riskData = profile.map(p => Number.isFinite(p.elevationFt) && p.elevationFt <= state.thresholdFt ? toDisplayDatum(p.elevationFt) : null);
-      const thresholdData = profile.map(() => toDisplayDatum(state.thresholdFt));
-      const inspectData = profile.map((p, i) => i === state.selectedIndex && Number.isFinite(p.elevationFt) ? toDisplayDatum(p.elevationFt) : null);
+      const activeLabels = state.activeEndpointLabels || { start:1, end:2 };
+      const activeSection = profile.length ? {
+        id:"active",
+        startLabel:activeLabels.start,
+        endLabel:activeLabels.end,
+        color:state.activeSectionColor,
+        profile
+      } : null;
+      const sections = [...state.comparisonSections, ...(activeSection ? [activeSection] : [])];
+      const lineDatasets = sections.map(section => ({
+        label:`Profile ${section.startLabel}–${section.endLabel}`,
+        keyLabel:`${section.startLabel}–${section.endLabel}`,
+        sectionId:section.id,
+        endpointLabels:[section.startLabel, section.endLabel],
+        profileSelectable:section.id === "active",
+        data:(section.profile || []).map(point => ({
+          x:point.distanceFt,
+          y:Number.isFinite(point.elevationFt) ? toDisplayDatum(point.elevationFt) : null
+        })),
+        legendColor:section.color,
+        borderColor:section.color,
+        backgroundColor:section.id === "active" ? `${section.color}24` : "transparent",
+        fill:section.id === "active",
+        pointRadius:0,
+        borderWidth:section.id === "active" ? chartFontSizes("crossSectionPane").line + 1 : chartFontSizes("crossSectionPane").line,
+        tension:.22,
+        spanGaps:false
+      }));
+      const maxX = profileDisplayXMax(profile);
+      const riskData = profile.map(point => ({
+        x:point.distanceFt,
+        y:Number.isFinite(point.elevationFt) && point.elevationFt <= state.thresholdFt ? toDisplayDatum(point.elevationFt) : null
+      }));
+      const thresholdValue = toDisplayDatum(state.thresholdFt);
+      const thresholdData = [{ x:0, y:thresholdValue }, { x:maxX, y:thresholdValue }];
+      const selectedPoint = profile[state.selectedIndex];
+      const inspectData = Number.isFinite(selectedPoint?.elevationFt)
+        ? [{ x:selectedPoint.distanceFt, y:toDisplayDatum(selectedPoint.elevationFt) }]
+        : [];
       const fonts = chartFontSizes("crossSectionPane");
       const yRange = state.profileYZoom || profileDisplayRange(profile);
       const config = {
         type:"line",
         data:{
-          labels,
           datasets:[
-            {
-              label:"Elevation",
-              data,
-              legendColor:"#22d3ee",
-              borderColor:"#22d3ee",
-              backgroundColor:"rgba(34,211,238,.16)",
-              fill:true,
-              pointRadius:0,
-              borderWidth:fonts.line,
-              tension:.22,
-              spanGaps:false
-            },
+            ...lineDatasets,
             {
               label:"Exposed below threshold",
               keyLabel:"Exposed",
@@ -5304,10 +5377,11 @@
         options:{
           responsive:true,
           maintainAspectRatio:false,
-          interaction:{ mode:"index", intersect:false },
+          interaction:{ mode:"nearest", intersect:false },
           onClick(event){
             const hits = state.chart.getElementsAtEventForMode(event, "nearest", { intersect:false }, true);
-            if(hits.length) selectProfileIndex(hits[0].index, true, true);
+            const hit = hits.find(item => state.chart.data.datasets[item.datasetIndex]?.profileSelectable);
+            if(hit) selectProfileIndex(hit.index, true, true);
           },
           plugins:{
             legend:{ display:false },
@@ -5315,7 +5389,10 @@
               titleFont:{ size:fonts.tooltip, weight:"800" },
               bodyFont:{ size:fonts.tooltip },
               callbacks:{
-                title(items){ return `${items[0].label} ft Along Section`; },
+                title(items){
+                  const distance = items[0]?.parsed?.x;
+                  return Number.isFinite(distance) ? `${Math.round(distance)} ft Along Section` : "";
+                },
                 label(item){
                   const value = item.parsed?.y;
                   return Number.isFinite(value) ? `${item.dataset.label}: ${value.toFixed(2)} ft ${datumLabel()}` : null;
@@ -5325,11 +5402,17 @@
           },
           scales:{
             x:{
+              type:"linear",
               min:state.profileXZoom?.min,
               max:state.profileXZoom?.max,
-              ticks:{ color:"#9fb0d1", maxTicksLimit:9, font:{ size:fonts.tick, weight:"700" } },
+              ticks:{
+                color:"#9fb0d1",
+                maxTicksLimit:9,
+                font:{ size:fonts.tick, weight:"700" },
+                callback(value){ return Math.round(Number(value)); }
+              },
               grid:{ color:"rgba(148,163,184,.12)" },
-              title:{ display:true, text:"A → A′ · Distance Along Section (ft)", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
+              title:{ display:true, text:"Numbered Endpoints · Distance Along Section (ft)", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
             },
             y:{
               min:yRange.min,
@@ -5339,7 +5422,8 @@
               title:{ display:true, text:`Elevation (ft ${datumLabel()})`, color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
             }
           }
-        }
+        },
+        plugins:[profileEndpointLabelsPlugin]
       };
       if(state.chart){
         const visibility = chartVisibility(state.chart);
@@ -5687,8 +5771,14 @@
       if(rerender) renderChart(state.profile);
     }
 
-    function clearSection(){
+    const SECTION_COLORS = ["#22d3ee","#a78bfa","#fbbf24","#34d399","#f472b6","#fb923c","#60a5fa","#e879f9"];
+
+    function removeActiveSection(){
       state.pendingPoints = [];
+      if(state.pendingMarker){
+        map.removeLayer(state.pendingMarker);
+        state.pendingMarker = null;
+      }
       state.markers.forEach(m => map.removeLayer(m));
       state.markers = [];
       if(state.line) map.removeLayer(state.line);
@@ -5697,33 +5787,89 @@
       state.riskLine = null;
       state.profile = [];
       state.activeSavedLineId = null;
+      state.activeEndpointLabels = null;
       resetInspection();
+    }
+
+    function renderComparisonSections(){
+      comparisonLayerGroup.clearLayers();
+      for(const section of state.comparisonSections){
+        L.polyline([section.a, section.b], {
+          color:section.color,
+          weight:4,
+          opacity:.82,
+          lineCap:"round"
+        }).addTo(comparisonLayerGroup);
+        L.marker(section.a, {
+          icon:markerIcon(section.startLabel, section.color),
+          interactive:false,
+          title:`Endpoint ${section.startLabel}`
+        }).addTo(comparisonLayerGroup);
+        L.marker(section.b, {
+          icon:markerIcon(section.endLabel, section.color),
+          interactive:false,
+          title:`Endpoint ${section.endLabel}`
+        }).addTo(comparisonLayerGroup);
+      }
+    }
+
+    function archiveActiveSection(){
+      const pts = currentLineLatLngs();
+      if(!pts || !state.profile.length || !state.activeEndpointLabels) return;
+      state.comparisonSections.push({
+        id:`drawn-${state.activeEndpointLabels.start}-${state.activeEndpointLabels.end}`,
+        startLabel:state.activeEndpointLabels.start,
+        endLabel:state.activeEndpointLabels.end,
+        color:state.activeSectionColor,
+        a:L.latLng(pts[0].lat, pts[0].lng),
+        b:L.latLng(pts[1].lat, pts[1].lng),
+        profile:state.profile.slice()
+      });
+      renderComparisonSections();
+    }
+
+    function clearSection(){
+      removeActiveSection();
+      state.comparisonSections = [];
+      state.nextEndpointNumber = 1;
+      state.activeSectionColor = SECTION_COLORS[0];
+      comparisonLayerGroup.clearLayers();
       updateStats([]);
       renderChart([]);
       renderSavedLines();
       setText("chartStatus", "Waiting for a line");
     }
 
-    function markerIcon(label=""){
+    function markerIcon(label="", color=state.activeSectionColor){
       const size = window.matchMedia("(max-width: 1180px)").matches ? 32 : 18;
       return L.divIcon({
         className:"",
-        html:`<div class="sectionMarker">${label ? `<span class="sectionMarkerLabel">${label}</span>` : ""}</div>`,
+        html:`<div class="sectionMarker" style="--section-color:${color}">${label ? `<span class="sectionMarkerLabel">${label}</span>` : ""}</div>`,
         iconSize:[size,size],
         iconAnchor:[size / 2,size / 2]
       });
     }
 
-    function drawSection(a, b, fit=false, savedLineId=null){
-      clearSection();
+    function drawSection(a, b, fit=false, savedLineId=null, append=false){
+      if(append){
+        archiveActiveSection();
+        removeActiveSection();
+      }else{
+        clearSection();
+      }
       state.activeSavedLineId = savedLineId;
+      const startLabel = state.nextEndpointNumber;
+      const endLabel = startLabel + 1;
+      state.nextEndpointNumber = endLabel + 1;
+      state.activeEndpointLabels = { start:startLabel, end:endLabel };
+      state.activeSectionColor = SECTION_COLORS[Math.floor((startLabel - 1) / 2) % SECTION_COLORS.length];
       renderSavedLines();
       state.markers = [
-        L.marker(a, { icon:markerIcon("A"), draggable:true, zIndexOffset:2000, title:"Section endpoint A" }).addTo(map),
-        L.marker(b, { icon:markerIcon("A′"), draggable:true, zIndexOffset:2000, title:"Section endpoint A prime" }).addTo(map)
+        L.marker(a, { icon:markerIcon(startLabel), draggable:true, zIndexOffset:2000, title:`Section endpoint ${startLabel}` }).addTo(map),
+        L.marker(b, { icon:markerIcon(endLabel), draggable:true, zIndexOffset:2000, title:`Section endpoint ${endLabel}` }).addTo(map)
       ];
       state.line = L.polyline([a, b], {
-        color:"#38bdf8",
+        color:state.activeSectionColor,
         weight:5,
         opacity:.95,
         lineCap:"round"
@@ -5769,8 +5915,12 @@
     function setDrawMode(active){
       state.drawMode = active;
       state.pendingPoints = [];
+      if(state.pendingMarker){
+        map.removeLayer(state.pendingMarker);
+        state.pendingMarker = null;
+      }
       $("drawBtn").classList.toggle("active", active);
-      $("drawBtn").textContent = active ? "Click two points" : "Draw section";
+      $("drawBtn").textContent = active ? "Click two points" : "Draw";
       map.getContainer().style.cursor = active ? "crosshair" : "";
       const prompt = $("drawPrompt");
       if(prompt){
@@ -5794,25 +5944,33 @@
     }
 
     function exportLineRecords(){
-      const records = state.savedLines.map(line => ({
-        id:line.id,
-        name:line.name || "Saved line",
-        thresholdFt:Number.isFinite(line.thresholdFt) ? line.thresholdFt : state.thresholdFt,
-        createdAt:line.createdAt || "",
-        a:L.latLng(line.a.lat, line.a.lng),
-        b:L.latLng(line.b.lat, line.b.lng)
+      const records = state.comparisonSections.map(section => ({
+        id:section.id,
+        name:`Profile ${section.startLabel}–${section.endLabel}`,
+        thresholdFt:state.thresholdFt,
+        createdAt:"",
+        a:section.a,
+        b:section.b
       }));
       const active = currentLineLatLngs();
-      if(active && !state.activeSavedLineId){
-        records.unshift({
-          id:"active-line",
-          name:"Active line",
+      if(active && state.activeEndpointLabels){
+        records.push({
+          id:`drawn-${state.activeEndpointLabels.start}-${state.activeEndpointLabels.end}`,
+          name:`Profile ${state.activeEndpointLabels.start}–${state.activeEndpointLabels.end}`,
           thresholdFt:state.thresholdFt,
           createdAt:"",
           a:active[0],
           b:active[1]
         });
       }
+      records.push(...state.savedLines.map(line => ({
+        id:line.id,
+        name:line.name || "Saved line",
+        thresholdFt:Number.isFinite(line.thresholdFt) ? line.thresholdFt : state.thresholdFt,
+        createdAt:line.createdAt || "",
+        a:L.latLng(line.a.lat, line.a.lng),
+        b:L.latLng(line.b.lat, line.b.lng)
+      })));
       return records;
     }
 
@@ -6290,15 +6448,18 @@
       }
       state.pendingPoints.push(event.latlng);
       if(state.pendingPoints.length === 1){
-        state.markers.forEach(m => map.removeLayer(m));
-        state.markers = [L.marker(event.latlng, { icon:markerIcon("A"), title:"Section endpoint A" }).addTo(map)];
+        const color = SECTION_COLORS[Math.floor((state.nextEndpointNumber - 1) / 2) % SECTION_COLORS.length];
+        state.pendingMarker = L.marker(event.latlng, {
+          icon:markerIcon(state.nextEndpointNumber, color),
+          title:`Section endpoint ${state.nextEndpointNumber}`
+        }).addTo(map);
         setText("chartStatus", "Choose endpoint");
         setText("drawPromptText", "Tap the map once more to choose the second point.");
         return;
       }
       const [a,b] = state.pendingPoints;
       setDrawMode(false);
-      drawSection(a,b);
+      drawSection(a,b,false,null,true);
       if(window.matchMedia("(max-width: 1180px)").matches){
         window.setTimeout(() => $("crossSectionPane").scrollIntoView({ behavior:"smooth", block:"start" }), 120);
       }
