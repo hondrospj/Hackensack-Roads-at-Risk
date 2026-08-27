@@ -3253,6 +3253,293 @@
         animation-iteration-count:1 !important;
       }
     }
+    /* Pane help and guided tutorial. */
+    .mapHeaderActions,
+    .paneHeaderActions{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:7px;
+    }
+
+    .paneHelpBtn{
+      flex:0 0 auto;
+      width:38px;
+      min-width:38px;
+      height:38px;
+      min-height:38px;
+      display:inline-grid;
+      place-items:center;
+      padding:0;
+      border-radius:999px;
+      border:1px solid rgba(191,219,254,.34);
+      background:rgba(96,165,250,.12);
+      color:var(--accent-strong);
+      font-size:18px;
+      line-height:1;
+      font-weight:950;
+    }
+
+    .paneHelpBtn:hover,
+    .paneHelpBtn:focus-visible{
+      border-color:#7dd3fc;
+      background:rgba(96,165,250,.22);
+      color:#fff;
+    }
+
+    .tourLaunch{
+      min-height:38px;
+      padding:8px 12px;
+      border-color:rgba(191,219,254,.36);
+      background:var(--accent-soft);
+      color:var(--accent-strong);
+      font-size:12px;
+      font-weight:950;
+      white-space:nowrap;
+    }
+
+    .exportPaneHeader{
+      flex:0 0 auto;
+      margin-bottom:11px;
+    }
+
+    .rrHelpBackdrop{
+      position:fixed;
+      inset:0;
+      z-index:18000;
+      display:grid;
+      place-items:center;
+      padding:18px;
+      background:rgba(2,6,23,.72);
+      -webkit-backdrop-filter:blur(6px);
+      backdrop-filter:blur(6px);
+    }
+
+    .rrHelpBackdrop[hidden],
+    .rrTour[hidden]{
+      display:none !important;
+    }
+
+    .rrHelpCard{
+      width:min(540px, calc(100vw - 36px));
+      max-height:min(78vh, 680px);
+      max-height:min(78dvh, 680px);
+      overflow:auto;
+      padding:20px;
+      border:1px solid rgba(125,211,252,.34);
+      border-radius:22px;
+      background:linear-gradient(180deg,#101b2f 0%,#0b1220 100%);
+      box-shadow:0 28px 90px rgba(0,0,0,.64);
+    }
+
+    .rrHelpHead,
+    .rrTourHead,
+    .rrTourActions,
+    .rrHelpActions{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .rrHelpHead h2,
+    .rrTourCard h2{
+      margin:0;
+      color:#fff;
+      font-size:24px;
+      line-height:1.08;
+      letter-spacing:-.025em;
+    }
+
+    .rrDialogClose{
+      flex:0 0 auto;
+      width:38px;
+      min-width:38px;
+      min-height:38px;
+      padding:0;
+      border-radius:999px;
+      font-size:24px;
+      line-height:1;
+    }
+
+    .rrHelpBody,
+    .rrTourBody{
+      color:#cbdaf2;
+      font-size:15px;
+      line-height:1.58;
+    }
+
+    .rrHelpBody{
+      margin-top:15px;
+    }
+
+    .rrHelpBody p,
+    .rrTourBody p{
+      margin:0 0 11px;
+    }
+
+    .rrHelpBody p:last-child,
+    .rrTourBody p:last-child{
+      margin-bottom:0;
+    }
+
+    .rrHelpBody strong,
+    .rrTourBody strong{
+      color:#fff;
+    }
+
+    .rrHelpActions{
+      justify-content:flex-end;
+      margin-top:18px;
+    }
+
+    .rrHelpTourBtn{
+      min-height:42px;
+      border-color:rgba(96,165,250,.55);
+      background:var(--accent-soft);
+      color:var(--accent-strong);
+    }
+
+    .rrTour{
+      position:fixed;
+      inset:0;
+      z-index:20000;
+      pointer-events:none;
+    }
+
+    .rrTourSpotlight{
+      position:fixed;
+      left:0;
+      top:0;
+      width:1px;
+      height:1px;
+      border:3px solid #7dd3fc;
+      border-radius:20px;
+      box-shadow:
+        0 0 0 9999px rgba(2,6,23,.78),
+        0 0 0 7px rgba(96,165,250,.22),
+        0 18px 50px rgba(0,0,0,.44);
+      transition:left .22s ease, top .22s ease, width .22s ease, height .22s ease;
+      pointer-events:none;
+    }
+
+    .rrTourCard{
+      position:fixed;
+      z-index:20002;
+      width:min(430px, calc(100vw - 28px));
+      max-height:min(560px, calc(100vh - 28px));
+      max-height:min(560px, calc(100dvh - 28px));
+      overflow:auto;
+      padding:20px;
+      border:1px solid rgba(125,211,252,.44);
+      border-radius:22px;
+      background:rgba(8,15,31,.985);
+      color:#edf7ff;
+      box-shadow:0 28px 90px rgba(0,0,0,.64);
+      pointer-events:auto;
+    }
+
+    .rrTourProgress{
+      color:#7dd3fc;
+      font-size:11px;
+      font-weight:950;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+    }
+
+    .rrTourCard h2{
+      margin:13px 0 9px;
+    }
+
+    .rrTourActions{
+      margin-top:18px;
+    }
+
+    .rrTourActions button{
+      min-width:96px;
+      min-height:42px;
+    }
+
+    .rrTourActions button.primary{
+      border-color:#60a5fa;
+      background:#2563eb;
+      color:#fff;
+    }
+
+    .rrTourActions button:disabled{
+      opacity:.35;
+      cursor:default;
+    }
+
+    body.rrTourActive .drawPrompt{
+      display:none !important;
+    }
+
+    @media (max-width:620px){
+      .mapControlHeader{
+        align-items:center;
+      }
+
+      .tourLaunch{
+        min-height:40px;
+        padding-inline:10px;
+        font-size:12px;
+      }
+
+      .paneHelpBtn{
+        width:40px;
+        min-width:40px;
+        height:40px;
+        min-height:40px;
+      }
+
+      .crossSectionPane .paneActions{
+        grid-template-columns:minmax(0,1fr) 44px 44px;
+      }
+
+      .floodHistoryPane .toolTitleRow,
+      .exportPane .toolTitleRow{
+        display:flex;
+        flex-direction:row;
+        align-items:center;
+        justify-content:space-between;
+      }
+
+      .rrHelpBackdrop{
+        align-items:end;
+        padding:10px max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+      }
+
+      .rrHelpCard{
+        width:100%;
+        max-height:78vh;
+        max-height:78dvh;
+        padding:17px;
+        border-radius:20px;
+      }
+
+      .rrTourCard{
+        left:10px !important;
+        right:10px !important;
+        top:auto !important;
+        bottom:max(10px, env(safe-area-inset-bottom)) !important;
+        width:auto;
+        max-height:48vh;
+        max-height:48dvh;
+        padding:17px;
+      }
+
+      .rrHelpHead h2,
+      .rrTourCard h2{
+        font-size:21px;
+      }
+
+      .rrHelpBody,
+      .rrTourBody{
+        font-size:14px;
+        line-height:1.52;
+      }
+    }
   </style>
 </head>
 <body>
@@ -3274,6 +3561,10 @@
     <section class="panelBlock mapControl" aria-label="Map view controls">
       <div class="mapControlHeader">
         <span>Map</span>
+        <div class="mapHeaderActions">
+          <button id="roadRiskTourBtn" class="tourLaunch" type="button">Take the tour</button>
+          <button class="paneHelpBtn" type="button" data-help-key="map" aria-label="Explain the map pane" title="Explain the map pane">?</button>
+        </div>
       </div>
       <div class="mapModes" aria-label="Basemap">
         <button data-basemap="current" class="active" type="button">Light</button>
@@ -3294,7 +3585,7 @@
       <section class="toolPane crossSectionPane" id="crossSectionPane">
         <div class="toolTitleRow">
           <div class="toolTitle">
-            Road profile
+            Road Profile
             <span class="titleDatumToggle" aria-label="Elevation datum">
               <button data-datum="navd88" class="active" type="button">NAVD88</button>
               <button data-datum="mllw" class="secondary" type="button">MLLW</button>
@@ -3302,6 +3593,7 @@
           </div>
           <div class="paneActions">
             <button id="drawBtn" class="drawAction" type="button">Draw</button>
+            <button class="paneHelpBtn" type="button" data-help-key="profile" aria-label="Explain the road profile pane" title="Explain the road profile pane">?</button>
             <button class="expandBtn secondary" type="button" data-expand-pane="crossSectionPane" aria-controls="crossSectionPane" aria-expanded="false" aria-label="Expand cross section" title="Expand cross section">+</button>
           </div>
         </div>
@@ -3367,7 +3659,10 @@
       <section class="toolPane floodHistoryPane" id="floodHistoryPane">
         <div class="toolTitleRow">
           <div class="toolTitle">Flood outlook <span class="pill" id="floodBucketPill">0.0 ft</span></div>
-          <button class="expandBtn secondary" type="button" data-expand-pane="floodHistoryPane" aria-controls="floodHistoryPane" aria-expanded="false" aria-label="Expand flood history" title="Expand flood history">+</button>
+          <div class="paneHeaderActions">
+            <button class="paneHelpBtn" type="button" data-help-key="outlook" aria-label="Explain the flood outlook pane" title="Explain the flood outlook pane">?</button>
+            <button class="expandBtn secondary" type="button" data-expand-pane="floodHistoryPane" aria-controls="floodHistoryPane" aria-expanded="false" aria-label="Expand flood history" title="Expand flood history">+</button>
+          </div>
         </div>
 
         <aside class="floodPane floodCharts">
@@ -3386,6 +3681,10 @@
       </section>
 
       <section class="toolPane exportPane" id="exportPane" aria-label="Export features">
+        <div class="toolTitleRow exportPaneHeader">
+          <div class="toolTitle">Save &amp; export</div>
+          <button class="paneHelpBtn" type="button" data-help-key="export" aria-label="Explain the save and export pane" title="Explain the save and export pane">?</button>
+        </div>
         <div class="exportGrid">
           <div class="exportColumn">
             <div class="exportColumnTitle">
@@ -3424,6 +3723,35 @@
         </div>
       </section>
     </aside>
+  </div>
+
+  <div id="roadRiskHelp" class="rrHelpBackdrop" hidden aria-hidden="true">
+    <section class="rrHelpCard" role="dialog" aria-modal="true" aria-labelledby="roadRiskHelpTitle">
+      <header class="rrHelpHead">
+        <h2 id="roadRiskHelpTitle">About this pane</h2>
+        <button id="roadRiskHelpClose" class="rrDialogClose secondary" type="button" aria-label="Close explanation">×</button>
+      </header>
+      <div id="roadRiskHelpBody" class="rrHelpBody"></div>
+      <div class="rrHelpActions">
+        <button id="roadRiskHelpTour" class="rrHelpTourBtn" type="button">Show me in the tour</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="roadRiskTour" class="rrTour" hidden aria-hidden="true">
+    <div id="roadRiskTourSpotlight" class="rrTourSpotlight" aria-hidden="true"></div>
+    <section id="roadRiskTourCard" class="rrTourCard" role="dialog" aria-modal="true" aria-labelledby="roadRiskTourTitle">
+      <header class="rrTourHead">
+        <span id="roadRiskTourProgress" class="rrTourProgress">1 of 12</span>
+        <button id="roadRiskTourClose" class="rrDialogClose secondary" type="button" aria-label="Close tutorial">×</button>
+      </header>
+      <h2 id="roadRiskTourTitle"></h2>
+      <div id="roadRiskTourBody" class="rrTourBody"></div>
+      <footer class="rrTourActions">
+        <button id="roadRiskTourBack" class="secondary" type="button">Back</button>
+        <button id="roadRiskTourNext" class="primary" type="button">Next</button>
+      </footer>
+    </section>
   </div>
 
   <script type="module">
@@ -3732,6 +4060,282 @@
       window.addEventListener("scroll", scheduleSync, { passive:true });
       window.addEventListener("resize", scheduleSync, { passive:true });
       syncActiveSection();
+    }
+
+    const ROADRISK_PANE_HELP = {
+      map:{
+        title:"Map",
+        tourStep:1,
+        body:`<p>Choose the background that makes the road easiest to recognize. <strong>Light</strong> keeps the interface quiet, <strong>Aerial</strong> shows real-world features, <strong>Relief</strong> emphasizes terrain, <strong>Streets</strong> favors labels, and <strong>Dark</strong> reduces glare.</p><p>The red outline is the town boundary. The shaded elevation surface and every road-profile calculation stay the same when you change basemaps—the buttons only change the visual reference underneath.</p>`
+      },
+      profile:{
+        title:"Road Profile",
+        tourStep:2,
+        body:`<p>Press <strong>Draw</strong>, choose two endpoints, and the app samples ground elevation along that line. Drag either endpoint to refine the route. The summary reports the lowest sampled elevation, the share of the line at or below your water level, and its total length.</p><p>Use NAVD88 for surveyed land elevations or MLLW for a tide-based reference. Pick a Minor, Moderate, or Major stage—or type an exact level and press Apply. The chart then shows where the road stays above water and where it falls below your chosen threshold.</p>`
+      },
+      outlook:{
+        title:"Flood outlook",
+        tourStep:7,
+        body:`<p>This pane asks a practical question: <strong>how often has water reached the selected road elevation, and how could that frequency change?</strong> The pill beside the title is the elevation currently being evaluated.</p><p>Observed bars come from the daily water-level archive. Low, Intermediate, and High are long-term sea-level pathways—not weather forecasts. The shaded future band communicates a range; the dashed line is the central projection for the selected pathway.</p>`
+      },
+      export:{
+        title:"Save & export",
+        tourStep:10,
+        body:`<p>Name and save useful profiles when you want to compare several roads. Saved lines remain visible together and are stored in this browser, so they are convenient working notes rather than a shared database.</p><p><strong>PNG image</strong> captures the current view. CSV exports sampled profile values for analysis, while SHP creates a GIS-ready line. Choose CSV + SHP when you want both versions together.</p>`
+      }
+    };
+
+    const ROADRISK_TOUR_STEPS = [
+      {
+        title:"Welcome to Roads at Risk",
+        target:".titleBar",
+        body:`<p>Think of this as a quick road-elevation stress test. Draw a route, choose a water level, and the app shows where that route is low enough to be exposed.</p><p><strong>It is a planning tool, not a road-closure order or a real-time emergency forecast.</strong> Use it to find weak points, compare routes, and frame better field questions.</p>`
+      },
+      {
+        title:"Pick the clearest map",
+        target:".mapControl",
+        body:`<p>Use <strong>Light</strong> for a clean working map, <strong>Aerial</strong> for recognizable buildings and pavement, <strong>Relief</strong> for terrain, <strong>Streets</strong> for labels, or <strong>Dark</strong> for low-glare viewing.</p><p>Changing the basemap never changes the elevation data, town boundary, profile, or risk result. It only changes what sits underneath your analysis.</p>`
+      },
+      {
+        title:"Draw the road you care about",
+        target:"#drawBtn",
+        body:`<p>Press <strong>Draw</strong>, then choose the start and end of the road segment. The app samples the elevation model between those points and builds a profile automatically.</p><p>Drag either blue endpoint when you want to follow a different block or crossing. If the line leaves the available elevation surface, the chart may contain a gap—that is missing coverage, not zero elevation.</p>`
+      },
+      {
+        title:"Read the three headline numbers",
+        target:".compactStats",
+        body:`<p><strong>Low point</strong> is the weakest sampled elevation along the line. <strong>Flooded</strong> is the percentage of the route at or below the chosen water level. <strong>Length</strong> is the measured distance between the endpoints.</p><p>Start here: a short route with one low point can tell a very different story from a long route with most of its length exposed.</p>`
+      },
+      {
+        title:"Keep the datum straight",
+        target:".titleDatumToggle",
+        body:`<p><strong>NAVD88</strong> is the surveyed land-elevation reference commonly used for roads and engineering. <strong>MLLW</strong> is a local tidal reference commonly used for water levels.</p><p>Switching datum changes the numbers shown so they share the selected reference; it does not move the road, reshape the terrain, or change which samples are above and below the equivalent water level.</p>`
+      },
+      {
+        title:"Set the water level",
+        target:".thresholdCompact",
+        body:`<p>The colored presets load this town's <strong>Minor, Moderate, and Major</strong> flood stages. For a specific scenario, type an exact level and press Apply.</p><p>That level drives the entire profile: pink segments are at or below it, the Flooded percentage is recalculated, and the dashed chart line moves with it. This is the fastest way to test how a few inches can change route exposure.</p>`
+      },
+      {
+        title:"Use the elevation chart",
+        target:".profilePane",
+        body:`<p>The cyan line is sampled ground elevation. Pink identifies samples at or below the threshold, the dashed line is your selected water level, and the dot marks the point being inspected.</p><p>Click the chart or nearby profile line to inspect a location. Use the key checkboxes to declutter layers. The <strong>+</strong> button enlarges the pane; on a mouse, wheel over the chart to change its vertical scale and double-click to reset it.</p>`
+      },
+      {
+        title:"Put that elevation in context",
+        target:".floodHistoryPane",
+        body:`<p>The pill beside Flood outlook is the elevation being tested—typically the selected profile point. The chart counts archive days when the daily peak reached or exceeded that elevation.</p><p>This connects a physical low spot to a frequency: not just “how low is the road?” but “how often has water historically reached that height?”</p>`
+      },
+      {
+        title:"Choose a future pathway",
+        target:".scenarioRow",
+        body:`<p><strong>Low, Intermediate, and High</strong> represent different long-term sea-level-rise pathways. They are planning scenarios, not confidence grades and not predictions of tomorrow's tide.</p><p>Use Intermediate as a middle planning case, then compare Low and High to see whether the decision changes across a reasonable range of futures.</p>`
+      },
+      {
+        title:"Read history and projection together",
+        target:".annualChartWrap",
+        body:`<p>Cyan bars are observed flood days by year. The gold band shows the future range for the active pathway, and the dashed gold line is its central projection.</p><p>Turn items on or off in the key when the chart feels busy. Focus on direction and scale: the important signal is how quickly exceedance days grow for the road elevation you selected.</p>`
+      },
+      {
+        title:"Save profiles for comparison",
+        target:".exportColumn:first-child",
+        body:`<p>Give the current line a short name and press Save. Its endpoints, selected threshold, and sampled profile stay available in this browser, and saved lines remain visible together on the map.</p><p>That makes it easy to compare an evacuation route, a low intersection, and an alternate crossing without redrawing each one from memory.</p>`
+      },
+      {
+        title:"Export something useful",
+        target:".exportColumn:nth-child(2)",
+        body:`<p><strong>PNG image</strong> is the quickest shareable snapshot. CSV gives you the sampled values for a spreadsheet or analysis workflow. SHP creates a GIS-ready line, and CSV + SHP packages both.</p><p>Before exporting, confirm the datum, threshold, route, and selected scenario—the export preserves the choices currently driving the screen.</p>`
+      }
+    ];
+
+    let roadRiskHelpKey = "map";
+    let roadRiskDialogReturnFocus = null;
+    let roadRiskTourIndex = 0;
+    let roadRiskTourReturnFocus = null;
+    let roadRiskTourPositionHandler = null;
+
+    function closeRoadRiskHelp(){
+      const modal = $("roadRiskHelp");
+      if(!modal || modal.hidden) return;
+      modal.hidden = true;
+      modal.setAttribute("aria-hidden", "true");
+      roadRiskDialogReturnFocus?.focus?.();
+      roadRiskDialogReturnFocus = null;
+    }
+
+    function openRoadRiskHelp(key, trigger){
+      const item = ROADRISK_PANE_HELP[key];
+      const modal = $("roadRiskHelp");
+      if(!item || !modal) return;
+      roadRiskHelpKey = key;
+      roadRiskDialogReturnFocus = trigger || document.activeElement;
+      setText("roadRiskHelpTitle", item.title);
+      $("roadRiskHelpBody").innerHTML = item.body;
+      modal.hidden = false;
+      modal.setAttribute("aria-hidden", "false");
+      $("roadRiskHelpClose")?.focus();
+    }
+
+    function visibleRoadRiskTourTarget(selector){
+      return [...document.querySelectorAll(selector)].find(element => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return rect.width > 4 && rect.height > 4 && style.display !== "none" && style.visibility !== "hidden";
+      }) || document.querySelector(selector);
+    }
+
+    function positionRoadRiskTour(){
+      const tutorial = $("roadRiskTour");
+      if(!tutorial || tutorial.hidden) return;
+      const step = ROADRISK_TOUR_STEPS[roadRiskTourIndex];
+      const target = step ? visibleRoadRiskTourTarget(step.target) : null;
+      const spotlight = $("roadRiskTourSpotlight");
+      const card = $("roadRiskTourCard");
+      if(!target || !spotlight || !card) return;
+
+      const rect = target.getBoundingClientRect();
+      const pad = 8;
+      const left = Math.max(4, rect.left - pad);
+      const top = Math.max(4, rect.top - pad);
+      spotlight.style.left = `${left}px`;
+      spotlight.style.top = `${top}px`;
+      spotlight.style.width = `${Math.max(20, Math.min(window.innerWidth - left - 4, rect.width + pad * 2))}px`;
+      spotlight.style.height = `${Math.max(20, Math.min(window.innerHeight - top - 4, rect.height + pad * 2))}px`;
+
+      if(window.innerWidth <= 620){
+        card.style.setProperty("left", "10px", "important");
+        card.style.setProperty("right", "10px", "important");
+        card.style.setProperty("top", "auto", "important");
+        card.style.setProperty("bottom", "max(10px, env(safe-area-inset-bottom))", "important");
+        return;
+      }
+
+      const margin = 14;
+      const gap = 18;
+      const cardRect = card.getBoundingClientRect();
+      const width = Math.min(cardRect.width, window.innerWidth - margin * 2);
+      const height = Math.min(cardRect.height, window.innerHeight - margin * 2);
+      const clampLeft = value => Math.max(margin, Math.min(window.innerWidth - width - margin, value));
+      const clampTop = value => Math.max(margin, Math.min(window.innerHeight - height - margin, value));
+      const targetBox = {
+        left:Math.max(0, rect.left - pad),
+        top:Math.max(0, rect.top - pad),
+        right:Math.min(window.innerWidth, rect.right + pad),
+        bottom:Math.min(window.innerHeight, rect.bottom + pad)
+      };
+      const candidates = [
+        [rect.left - width - gap, rect.top],
+        [rect.right + gap, rect.top],
+        [rect.left, rect.bottom + gap],
+        [rect.left, rect.top - height - gap],
+        [margin, margin],
+        [window.innerWidth - width - margin, margin],
+        [margin, window.innerHeight - height - margin],
+        [window.innerWidth - width - margin, window.innerHeight - height - margin]
+      ].map(([x,y]) => ({ left:clampLeft(x), top:clampTop(y) }));
+      const overlap = candidate => {
+        const w = Math.max(0, Math.min(candidate.left + width, targetBox.right) - Math.max(candidate.left, targetBox.left));
+        const h = Math.max(0, Math.min(candidate.top + height, targetBox.bottom) - Math.max(candidate.top, targetBox.top));
+        return w * h;
+      };
+      candidates.sort((a,b) => overlap(a) - overlap(b));
+      card.style.setProperty("left", `${candidates[0].left}px`, "important");
+      card.style.setProperty("top", `${candidates[0].top}px`, "important");
+      card.style.setProperty("right", "auto", "important");
+      card.style.setProperty("bottom", "auto", "important");
+    }
+
+    function renderRoadRiskTourStep(){
+      const step = ROADRISK_TOUR_STEPS[roadRiskTourIndex];
+      if(!step) return;
+      setText("roadRiskTourProgress", `${roadRiskTourIndex + 1} of ${ROADRISK_TOUR_STEPS.length}`);
+      setText("roadRiskTourTitle", step.title);
+      $("roadRiskTourBody").innerHTML = step.body;
+      $("roadRiskTourBack").disabled = roadRiskTourIndex === 0;
+      setText("roadRiskTourNext", roadRiskTourIndex === ROADRISK_TOUR_STEPS.length - 1 ? "Finish" : "Next");
+
+      window.setTimeout(() => {
+        const target = visibleRoadRiskTourTarget(step.target);
+        target?.scrollIntoView({ block:"center", inline:"nearest", behavior:"auto" });
+        window.setTimeout(positionRoadRiskTour, 80);
+        window.setTimeout(positionRoadRiskTour, 260);
+      }, 30);
+    }
+
+    function setRoadRiskTourOpen(open, startIndex=0){
+      const tutorial = $("roadRiskTour");
+      if(!tutorial) return;
+      if(open){
+        closeRoadRiskHelp();
+        const expandedPane = document.querySelector(".toolPane.isExpanded");
+        if(expandedPane) togglePaneExpansion(expandedPane.id);
+        roadRiskTourReturnFocus = document.activeElement;
+        roadRiskTourIndex = clamp(Math.round(startIndex), 0, ROADRISK_TOUR_STEPS.length - 1);
+        tutorial.hidden = false;
+        tutorial.setAttribute("aria-hidden", "false");
+        document.body.classList.add("rrTourActive");
+        roadRiskTourPositionHandler = () => positionRoadRiskTour();
+        window.addEventListener("resize", roadRiskTourPositionHandler);
+        document.addEventListener("scroll", roadRiskTourPositionHandler, true);
+        renderRoadRiskTourStep();
+        $("roadRiskTourNext")?.focus();
+      }else{
+        tutorial.hidden = true;
+        tutorial.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("rrTourActive");
+        if(roadRiskTourPositionHandler){
+          window.removeEventListener("resize", roadRiskTourPositionHandler);
+          document.removeEventListener("scroll", roadRiskTourPositionHandler, true);
+          roadRiskTourPositionHandler = null;
+        }
+        roadRiskTourReturnFocus?.focus?.();
+        roadRiskTourReturnFocus = null;
+      }
+    }
+
+    function installRoadRiskHelpAndTour(){
+      document.querySelectorAll("[data-help-key]").forEach(button => {
+        button.addEventListener("click", () => openRoadRiskHelp(button.dataset.helpKey, button));
+      });
+      $("roadRiskHelpClose")?.addEventListener("click", closeRoadRiskHelp);
+      $("roadRiskHelp")?.addEventListener("click", event => {
+        if(event.target === $("roadRiskHelp")) closeRoadRiskHelp();
+      });
+      $("roadRiskHelpTour")?.addEventListener("click", () => {
+        const step = ROADRISK_PANE_HELP[roadRiskHelpKey]?.tourStep || 0;
+        closeRoadRiskHelp();
+        setRoadRiskTourOpen(true, step);
+      });
+      $("roadRiskTourBtn")?.addEventListener("click", () => setRoadRiskTourOpen(true, 0));
+      $("roadRiskTourClose")?.addEventListener("click", () => setRoadRiskTourOpen(false));
+      $("roadRiskTourBack")?.addEventListener("click", () => {
+        if(roadRiskTourIndex > 0){
+          roadRiskTourIndex -= 1;
+          renderRoadRiskTourStep();
+        }
+      });
+      $("roadRiskTourNext")?.addEventListener("click", () => {
+        if(roadRiskTourIndex >= ROADRISK_TOUR_STEPS.length - 1) setRoadRiskTourOpen(false);
+        else{
+          roadRiskTourIndex += 1;
+          renderRoadRiskTourStep();
+        }
+      });
+      document.addEventListener("keydown", event => {
+        const helpOpen = !$("roadRiskHelp")?.hidden;
+        const tourOpen = !$("roadRiskTour")?.hidden;
+        if(!helpOpen && !tourOpen) return;
+        if(event.key === "Escape"){
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if(helpOpen) closeRoadRiskHelp();
+          if(tourOpen) setRoadRiskTourOpen(false);
+          return;
+        }
+        if(!tourOpen) return;
+        if(event.key === "ArrowRight") $("roadRiskTourNext")?.click();
+        if(event.key === "ArrowLeft") $("roadRiskTourBack")?.click();
+      });
     }
 
     function niceScaleFeet(maxFeet){
@@ -5218,6 +5822,7 @@
       button.addEventListener("click", () => togglePaneExpansion(button.dataset.expandPane));
     });
     installMobileToolNavigation();
+    installRoadRiskHelpAndTour();
     document.addEventListener("keydown", event => {
       if(event.key !== "Escape") return;
       const expandedPane = document.querySelector(".toolPane.isExpanded");
