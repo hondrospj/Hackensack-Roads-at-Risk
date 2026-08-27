@@ -3540,6 +3540,42 @@
         line-height:1.52;
       }
     }
+
+    /* Keep the desktop tool rail inside Safari/macOS viewports. */
+    @media (min-width:1181px){
+      .rightStack{
+        max-width:calc(100vw - (var(--ui-gap) * 2));
+        overflow-x:hidden;
+        padding-bottom:max(2px, env(safe-area-inset-bottom));
+      }
+
+      .toolPane,
+      .toolTitleRow,
+      .chartHeader,
+      .tinyChartLabel,
+      .chartKey,
+      .exportGrid,
+      .exportColumn{
+        min-width:0;
+        max-width:100%;
+      }
+
+      .toolTitle{white-space:normal}
+
+      #annualFloodKey{
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        width:100%;
+      }
+
+      #annualFloodKey .keyToggle{
+        min-width:0;
+        width:100%;
+        overflow:hidden;
+      }
+    }
+
+    #profileChart{touch-action:pan-y}
   </style>
 </head>
 <body>
@@ -3555,7 +3591,6 @@
         <p class="eyebrow">Hackensack</p>
         <h1>Roads at Risk</h1>
       </div>
-      <div class="badge"><span class="dot" id="readyDot"></span><span id="readyText">Loading DEM</span></div>
     </header>
 
     <section class="panelBlock mapControl" aria-label="Map view controls">
@@ -3658,7 +3693,7 @@
 
       <section class="toolPane floodHistoryPane" id="floodHistoryPane">
         <div class="toolTitleRow">
-          <div class="toolTitle">Flood outlook <span class="pill" id="floodBucketPill">0.0 ft</span></div>
+          <div class="toolTitle">Flood Outlook <span class="pill" id="floodBucketPill">0.0 ft</span></div>
           <div class="paneHeaderActions">
             <button class="paneHelpBtn" type="button" data-help-key="outlook" aria-label="Explain the flood outlook pane" title="Explain the flood outlook pane">?</button>
             <button class="expandBtn secondary" type="button" data-expand-pane="floodHistoryPane" aria-controls="floodHistoryPane" aria-expanded="false" aria-label="Expand flood history" title="Expand flood history">+</button>
@@ -3672,8 +3707,8 @@
             <button data-scenario="high" class="secondary" type="button">High</button>
           </div>
           <div class="tinyChartLabel annualLabel">
-            <span>Flood days</span>
-            <div class="chartKey" id="annualFloodKey" aria-label="Flood days by year key"></div>
+            <span>Flood Days</span>
+            <div class="chartKey" id="annualFloodKey" aria-label="Flood Days by Year key"></div>
           </div>
           <div class="tinyChartWrap annualChartWrap"><canvas id="dotAnnualChart"></canvas></div>
           <p class="modelNote" id="projectionNote"></p>
@@ -3682,7 +3717,7 @@
 
       <section class="toolPane exportPane" id="exportPane" aria-label="Export features">
         <div class="toolTitleRow exportPaneHeader">
-          <div class="toolTitle">Save &amp; export</div>
+          <div class="toolTitle">Save &amp; Export</div>
           <button class="paneHelpBtn" type="button" data-help-key="export" aria-label="Explain the save and export pane" title="Explain the save and export pane">?</button>
         </div>
         <div class="exportGrid">
@@ -3711,8 +3746,8 @@
               <button id="screenshotBtn" type="button">PNG image</button>
               <div class="exportFormatRow">
                 <select id="exportFormat" aria-label="Cross section export format">
-                  <option value="csv">CSV</option>
-                  <option value="shp">Shapefile (SHP)</option>
+                  <option value="csv">CSV — Coordinates + Elevation</option>
+                  <option value="shp">SHP — Lines + Elevation Points</option>
                   <option value="both">CSV + SHP</option>
                 </select>
                 <button id="exportBtn" class="secondary" type="button">Export</button>
@@ -3790,6 +3825,7 @@
       thresholdFt:4.28,
       uncertaintyFt:.5,
       datum:"navd88",
+      profileXZoom:null,
       profileYZoom:null,
       activeBasemap:"current",
       projectionScenario:"intermediate"
@@ -3909,15 +3945,17 @@
       };
     }
     function keyColor(dataset){
-      const isRange = String(dataset.label || "").toLowerCase().includes("range");
+      const label = String(dataset.label || "").toLowerCase();
+      const isRange = label.includes("range") || label.includes("uncertainty");
       const color = dataset.legendColor || (isRange ? dataset.backgroundColor : dataset.borderColor) || dataset.backgroundColor;
       return Array.isArray(color) ? color[0] : String(color || "#7dd3fc");
     }
     function keySwatchClass(dataset){
       const classes = ["keySwatch"];
+      const label = String(dataset.label || "").toLowerCase();
       if(dataset.showLine === false) classes.push("isPoint");
       else if(Array.isArray(dataset.borderDash) && dataset.borderDash.length) classes.push("isDashed");
-      else if(dataset.type === "bar" || String(dataset.label || "").toLowerCase().includes("range")) classes.push("isArea");
+      else if(dataset.type === "bar" || label.includes("range") || label.includes("uncertainty")) classes.push("isArea");
       return classes.join(" ");
     }
     function setDatasetGroupVisibility(chart, datasetIndex, visible){
@@ -4074,14 +4112,14 @@
         body:`<p>Press <strong>Draw</strong>, choose two endpoints, and the app samples ground elevation along that line. Drag either endpoint to refine the route. The summary reports the lowest sampled elevation, the share of the line at or below your water level, and its total length.</p><p>Use NAVD88 for surveyed land elevations or MLLW for a tide-based reference. Pick a Minor, Moderate, or Major stage—or type an exact level and press Apply. The chart then shows where the road stays above water and where it falls below your chosen threshold.</p>`
       },
       outlook:{
-        title:"Flood outlook",
+        title:"Flood Outlook",
         tourStep:7,
-        body:`<p>This pane asks a practical question: <strong>how often has water reached the selected road elevation, and how could that frequency change?</strong> The pill beside the title is the elevation currently being evaluated.</p><p>Observed bars come from the daily water-level archive. Low, Intermediate, and High are long-term sea-level pathways—not weather forecasts. The shaded future band communicates a range; the dashed line is the central projection for the selected pathway.</p>`
+        body:`<p>This pane asks a practical question: <strong>how often has water reached the selected road elevation, and how could that frequency change?</strong> The pill beside the title is the elevation currently being evaluated.</p><p>Observed bars come from the daily water-level archive. Low, Intermediate, and High are long-term sea-level pathways—not weather forecasts. The shaded <strong>Uncertainty</strong> area communicates a range; the solid yellow line is the central projection for the selected pathway.</p>`
       },
       export:{
-        title:"Save & export",
+        title:"Save & Export",
         tourStep:10,
-        body:`<p>Name and save useful profiles when you want to compare several roads. Saved lines remain visible together and are stored in this browser, so they are convenient working notes rather than a shared database.</p><p><strong>PNG image</strong> captures the current view. CSV exports sampled profile values for analysis, while SHP creates a GIS-ready line. Choose CSV + SHP when you want both versions together.</p>`
+        body:`<p>Name and save useful profiles when you want to compare several roads. Saved lines remain visible together and are stored in this browser, so they are convenient working notes rather than a shared database.</p><p><strong>PNG image</strong> captures the current view. CSV exports every sampled latitude, longitude, distance, elevation, threshold, and clearance. SHP packages the cross-section lines plus a separate elevation-point layer with the same coordinate attributes.</p>`
       }
     };
 
@@ -4119,12 +4157,12 @@
       {
         title:"Use the elevation chart",
         target:".profilePane",
-        body:`<p>The cyan line is sampled ground elevation. Pink identifies samples at or below the threshold, the dashed line is your selected water level, and the dot marks the point being inspected.</p><p>Click the chart or nearby profile line to inspect a location. Use the key checkboxes to declutter layers. The <strong>+</strong> button enlarges the pane; on a mouse, wheel over the chart to change its vertical scale and double-click to reset it.</p>`
+        body:`<p>The cyan line is sampled ground elevation. Pink identifies samples at or below the threshold, the dashed line is your selected water level, and the dot marks the point being inspected.</p><p>Pinch with two fingers—or pinch on a Mac trackpad—to zoom into a specific stretch of the road. A regular mouse wheel changes the vertical scale. Double-click the chart to reset both views.</p>`
       },
       {
         title:"Put that elevation in context",
         target:".floodHistoryPane",
-        body:`<p>The pill beside Flood outlook is the elevation being tested—typically the selected profile point. The chart counts archive days when the daily peak reached or exceeded that elevation.</p><p>This connects a physical low spot to a frequency: not just “how low is the road?” but “how often has water historically reached that height?”</p>`
+        body:`<p>The pill beside Flood Outlook is the elevation being tested—typically the selected profile point. The chart counts archive days when the daily peak reached or exceeded that elevation.</p><p>This connects a physical low spot to a frequency: not just “how low is the road?” but “how often has water historically reached that height?”</p>`
       },
       {
         title:"Choose a future pathway",
@@ -4134,7 +4172,7 @@
       {
         title:"Read history and projection together",
         target:".annualChartWrap",
-        body:`<p>Cyan bars are observed flood days by year. The gold band shows the future range for the active pathway, and the dashed gold line is its central projection.</p><p>Turn items on or off in the key when the chart feels busy. Focus on direction and scale: the important signal is how quickly exceedance days grow for the road elevation you selected.</p>`
+        body:`<p>Cyan bars are observed Flood Days by Year. The shaded gold Uncertainty area shows the future range for the active pathway, and the solid yellow line is its central projection.</p><p>Turn items on or off in the key when the chart feels busy. Focus on direction and scale: the important signal is how quickly exceedance days grow for the road elevation you selected.</p>`
       },
       {
         title:"Save profiles for comparison",
@@ -4144,7 +4182,7 @@
       {
         title:"Export something useful",
         target:".exportColumn:nth-child(2)",
-        body:`<p><strong>PNG image</strong> is the quickest shareable snapshot. CSV gives you the sampled values for a spreadsheet or analysis workflow. SHP creates a GIS-ready line, and CSV + SHP packages both.</p><p>Before exporting, confirm the datum, threshold, route, and selected scenario—the export preserves the choices currently driving the screen.</p>`
+        body:`<p><strong>PNG image</strong> is the quickest shareable snapshot. CSV includes sampled coordinates and elevation values. SHP creates a line layer and an elevation-point layer, both in WGS84 latitude/longitude; CSV + SHP packages both formats.</p><p>Before exporting, confirm the datum, threshold, route, and selected scenario—the export preserves the choices currently driving the screen.</p>`
       }
     ];
 
@@ -4674,9 +4712,8 @@
     }
 
     function setReady(ok, text){
-      $("readyText").textContent = text;
-      $("readyDot").style.background = ok ? "var(--ok)" : "var(--warn)";
-      $("readyDot").style.boxShadow = ok ? "0 0 0 4px rgba(45,212,191,.18)" : "0 0 0 4px rgba(213,138,0,.18)";
+      document.documentElement.dataset.demStatus = ok ? "ready" : "unavailable";
+      document.documentElement.dataset.demStatusText = text || "";
     }
 
     function mercatorFromLatLng(lat, lon){
@@ -4820,14 +4857,93 @@
     }
 
     function applyProfileZoom(chart){
-      if(!chart || !state.profileYZoom) return;
-      chart.options.scales.y.min = state.profileYZoom.min;
-      chart.options.scales.y.max = state.profileYZoom.max;
+      if(!chart) return;
+      if(state.profileYZoom){
+        chart.options.scales.y.min = state.profileYZoom.min;
+        chart.options.scales.y.max = state.profileYZoom.max;
+      }
+      if(state.profileXZoom){
+        chart.options.scales.x.min = state.profileXZoom.min;
+        chart.options.scales.x.max = state.profileXZoom.max;
+      }
+    }
+
+    function setProfileXZoom(center, factor, startRange=state.profileXZoom){
+      if(!state.chart || state.profile.length < 2 || !Number.isFinite(center) || !Number.isFinite(factor)) return;
+      const fullMin = 0;
+      const fullMax = state.profile.length - 1;
+      const currentMin = Number.isFinite(startRange?.min) ? startRange.min : fullMin;
+      const currentMax = Number.isFinite(startRange?.max) ? startRange.max : fullMax;
+      const currentSpan = Math.max(1, currentMax - currentMin);
+      const nextSpan = clamp(currentSpan * factor, Math.min(8, fullMax), fullMax);
+      const centerRatio = clamp((center - currentMin) / currentSpan, 0, 1);
+      let nextMin = center - nextSpan * centerRatio;
+      let nextMax = nextMin + nextSpan;
+      if(nextMin < fullMin){
+        nextMin = fullMin;
+        nextMax = nextSpan;
+      }
+      if(nextMax > fullMax){
+        nextMax = fullMax;
+        nextMin = fullMax - nextSpan;
+      }
+      state.profileXZoom = nextSpan >= fullMax - .01 ? null : { min:nextMin, max:nextMax };
+      if(state.profileXZoom){
+        state.chart.options.scales.x.min = state.profileXZoom.min;
+        state.chart.options.scales.x.max = state.profileXZoom.max;
+      }else{
+        delete state.chart.options.scales.x.min;
+        delete state.chart.options.scales.x.max;
+      }
+      state.chart.update("none");
+    }
+
+    function installProfilePinchZoom(){
+      const canvas = $("profileChart");
+      if(!canvas) return;
+      let pinch = null;
+      const touchDistance = touches => Math.hypot(
+        touches[0].clientX - touches[1].clientX,
+        touches[0].clientY - touches[1].clientY
+      );
+
+      canvas.addEventListener("touchstart", event => {
+        if(event.touches.length !== 2 || !state.chart || state.profile.length < 2) return;
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const centerPixel = ((event.touches[0].clientX + event.touches[1].clientX) / 2) - rect.left;
+        const center = state.chart.scales.x?.getValueForPixel(centerPixel);
+        if(!Number.isFinite(center)) return;
+        pinch = {
+          distance:Math.max(1, touchDistance(event.touches)),
+          center,
+          range:state.profileXZoom ? { ...state.profileXZoom } : null
+        };
+      }, { passive:false });
+
+      canvas.addEventListener("touchmove", event => {
+        if(!pinch || event.touches.length !== 2) return;
+        event.preventDefault();
+        const distance = Math.max(1, touchDistance(event.touches));
+        setProfileXZoom(pinch.center, pinch.distance / distance, pinch.range);
+      }, { passive:false });
+
+      const endPinch = event => {
+        if(event.touches.length < 2) pinch = null;
+      };
+      canvas.addEventListener("touchend", endPinch, { passive:true });
+      canvas.addEventListener("touchcancel", () => { pinch = null; }, { passive:true });
     }
 
     function handleProfileWheel(event){
       if(!state.chart || !state.profile.length) return;
       event.preventDefault();
+      if(event.ctrlKey || event.metaKey){
+        const xScale = state.chart.scales.x;
+        const center = xScale?.getValueForPixel(event.offsetX);
+        setProfileXZoom(center, event.deltaY < 0 ? .82 : 1.18);
+        return;
+      }
       const yScale = state.chart.scales.y;
       if(!yScale) return;
       const base = profileDisplayRange(state.profile);
@@ -4940,7 +5056,7 @@
               titleFont:{ size:fonts.tooltip, weight:"800" },
               bodyFont:{ size:fonts.tooltip },
               callbacks:{
-                title(items){ return `${items[0].label} ft along section`; },
+                title(items){ return `${items[0].label} ft Along Section`; },
                 label(item){
                   const value = item.parsed?.y;
                   return Number.isFinite(value) ? `${item.dataset.label}: ${value.toFixed(2)} ft ${datumLabel()}` : null;
@@ -4950,9 +5066,11 @@
           },
           scales:{
             x:{
+              min:state.profileXZoom?.min,
+              max:state.profileXZoom?.max,
               ticks:{ color:"#9fb0d1", maxTicksLimit:9, font:{ size:fonts.tick, weight:"700" } },
               grid:{ color:"rgba(148,163,184,.12)" },
-              title:{ display:true, text:"Distance along section (ft)", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
+              title:{ display:true, text:"Distance Along Section (ft)", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
             },
             y:{
               min:yRange.min,
@@ -5035,8 +5153,8 @@
             },
             {
               type:"line",
-              label:"Forecast range",
-              keyLabel:"Forecast band",
+              label:"Uncertainty",
+              keyLabel:"Uncertainty",
               legendGroup:"annualForecastRange",
               data:high,
               legendColor:"rgba(251,191,36,.46)",
@@ -5054,8 +5172,7 @@
               legendColor:"rgba(251,191,36,.96)",
               borderColor:"rgba(251,191,36,.96)",
               backgroundColor:"rgba(251,191,36,.96)",
-              borderDash:[7,5],
-              borderWidth:fonts.line,
+              borderWidth:Math.max(3, fonts.line),
               pointRadius:0,
               pointHitRadius:8,
               tension:.2,
@@ -5079,16 +5196,16 @@
                   const v = ctx.parsed?.y;
                   if(!Number.isFinite(v)) return null;
                   if(ctx.dataset.label === "Forecast low") return null;
-                  if(ctx.dataset.label === "Forecast range"){
+                  if(ctx.dataset.label === "Uncertainty"){
                     const lowValue = low[ctx.dataIndex];
                     return Number.isFinite(lowValue)
-                      ? `Range: ${fmtFlood(lowValue, 0)} - ${fmtFlood(v, 0)} flood days`
+                      ? `Uncertainty: ${fmtFlood(lowValue, 0)} - ${fmtFlood(v, 0)} Flood Days`
                       : null;
                   }
                   if(ctx.dataset.label === "Projection"){
-                    return `${bucketStats?.scenarioShort || "Scenario"} projection: ${fmtFlood(v, ctx.dataIndex >= historicalLength ? 1 : 0)} flood days`;
+                    return `${bucketStats?.scenarioShort || "Scenario"} Projection: ${fmtFlood(v, ctx.dataIndex >= historicalLength ? 1 : 0)} Flood Days`;
                   }
-                  return `${ctx.dataset.label}: ${fmtFlood(v, ctx.dataIndex >= historicalLength ? 1 : 0)} flood days`;
+                  return `${ctx.dataset.label}: ${fmtFlood(v, ctx.dataIndex >= historicalLength ? 1 : 0)} Flood Days`;
                 }
               }
             }
@@ -5096,12 +5213,14 @@
           scales:{
             x:{
               ticks:{ color:"#9fb0d1", maxRotation:0, autoSkip:true, maxTicksLimit:6, font:{ size:fonts.tick, weight:"700" } },
-              grid:{ display:false }
+              grid:{ display:false },
+              title:{ display:true, text:"Year", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
             },
             y:{
               beginAtZero:true,
               ticks:{ color:"#9fb0d1", precision:0, maxTicksLimit:4, font:{ size:fonts.tick, weight:"700" } },
-              grid:{ color:"rgba(148,163,184,.12)" }
+              grid:{ color:"rgba(148,163,184,.12)" },
+              title:{ display:true, text:"Flood Days", color:"#bfdbfe", font:{ size:fonts.title, weight:"bold" } }
             }
           }
         }
@@ -5343,6 +5462,8 @@
         return;
       }
       state.profile = buildProfile(a, b);
+      state.profileXZoom = null;
+      state.profileYZoom = null;
       state.selectedIndex = defaultInspectionIndex(state.profile);
       updateStats(state.profile);
       renderRiskSegments(state.profile);
@@ -5422,13 +5543,16 @@
     }
 
     function shapefileGeoJson(records){
-      return {
-        type:"FeatureCollection",
-        features:records.map(record => ({
+      const features = [];
+      for(const record of records){
+        const profile = buildProfile(record.a, record.b);
+        features.push({
           type:"Feature",
           geometry:{
             type:"LineString",
-            coordinates:[[record.a.lng, record.a.lat], [record.b.lng, record.b.lat]]
+            coordinates:profile.length
+              ? profile.map(point => [point.lng, point.lat])
+              : [[record.a.lng, record.a.lat], [record.b.lng, record.b.lat]]
           },
           properties:{
             section_id:record.id,
@@ -5437,7 +5561,29 @@
             length_ft:Number((map.distance(record.a, record.b) * FT_PER_M).toFixed(2)),
             created:record.createdAt ? record.createdAt.slice(0, 10) : ""
           }
-        }))
+        });
+
+        profile.forEach((point, pointIndex) => {
+          features.push({
+            type:"Feature",
+            geometry:{ type:"Point", coordinates:[point.lng, point.lat] },
+            properties:{
+              section_id:record.id,
+              name:record.name,
+              point_idx:pointIndex,
+              dist_ft:Number(point.distanceFt.toFixed(2)),
+              elev_ft:Number.isFinite(point.elevationFt) ? Number(point.elevationFt.toFixed(3)) : null,
+              thresh_ft:Number(record.thresholdFt.toFixed(3)),
+              clear_ft:Number.isFinite(point.elevationFt) ? Number((point.elevationFt - record.thresholdFt).toFixed(3)) : null,
+              latitude:Number(point.lat.toFixed(8)),
+              longitude:Number(point.lng.toFixed(8))
+            }
+          });
+        });
+      }
+      return {
+        type:"FeatureCollection",
+        features
       };
     }
 
@@ -5458,7 +5604,10 @@
         folder:"roads_at_risk_cross_sections",
         outputType:"arraybuffer",
         compression:"STORE",
-        types:{ polyline:"cross_sections" }
+        types:{
+          point:"elevation_points",
+          polyline:"cross_sections"
+        }
       });
     }
 
@@ -5491,7 +5640,7 @@
             downloadBlob(combined, "roads-at-risk-cross-sections-csv-shp.zip");
           }
         }
-        setExportStatus(`${format === "both" ? "CSV + SHP" : format.toUpperCase()} exported for ${records.length} cross section${records.length === 1 ? "" : "s"}.`);
+        setExportStatus(`${format === "both" ? "CSV + SHP" : format.toUpperCase()} exported with WGS84 coordinates and sampled elevations for ${records.length} cross section${records.length === 1 ? "" : "s"}.`);
       }catch(err){
         console.error(err);
         setExportStatus(err?.message || "Export failed. Please try again.");
@@ -5863,7 +6012,9 @@
     updateStats([]);
     updateThresholdControls();
     $("profileChart").addEventListener("wheel", handleProfileWheel, { passive:false });
+    installProfilePinchZoom();
     $("profileChart").addEventListener("dblclick", () => {
+      state.profileXZoom = null;
       state.profileYZoom = null;
       renderChart(state.profile);
     });
