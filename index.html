@@ -3546,17 +3546,59 @@
       .rightStack{
         max-width:calc(100vw - (var(--ui-gap) * 2));
         overflow-x:hidden;
-        padding-bottom:max(18px, env(safe-area-inset-bottom));
-        scroll-padding-bottom:max(18px, env(safe-area-inset-bottom));
       }
 
       .shell:not(.paneExpanded) .rightStack{
-        grid-template-rows:minmax(570px,auto) minmax(360px,auto) minmax(240px,auto);
-        align-content:start;
+        grid-template-rows:auto minmax(0,1fr);
+        align-content:stretch;
+        overflow:hidden;
+        padding:0;
       }
 
-      .shell:not(.paneExpanded) .floodHistoryPane{min-height:360px}
-      .shell:not(.paneExpanded) .exportPane{min-height:240px}
+      .shell:not(.paneExpanded) .mobileToolNav{
+        position:relative;
+        inset:auto;
+        z-index:2;
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:7px;
+        width:100%;
+        padding:7px;
+        border:1px solid var(--line-strong);
+        border-radius:14px;
+        background:rgba(11,18,32,.96);
+        box-shadow:var(--shadow);
+      }
+
+      .shell:not(.paneExpanded) .mobileToolNav button{
+        min-width:0;
+        min-height:44px;
+        padding:8px 7px;
+        border-radius:10px;
+        font-size:13px;
+        font-weight:950;
+      }
+
+      .shell:not(.paneExpanded) .mobileToolNav button[aria-current="true"]{
+        border-color:var(--accent-strong);
+        background:var(--accent-soft);
+        color:var(--accent-strong);
+        box-shadow:inset 0 0 0 1px rgba(191,219,254,.12);
+      }
+
+      .shell:not(.paneExpanded) .toolPane{
+        display:none;
+        width:100%;
+        height:100%;
+        min-height:0;
+        overflow:auto;
+        overscroll-behavior:contain;
+        -webkit-overflow-scrolling:touch;
+      }
+
+      .shell:not(.paneExpanded) .toolPane.isWorkspaceActive{
+        display:flex;
+      }
 
       .toolPane,
       .toolTitleRow,
@@ -3633,12 +3675,12 @@
 
     <aside class="rightStack" aria-label="Roads at Risk tools">
       <nav class="mobileToolNav" aria-label="Roads at Risk sections">
-        <button type="button" data-mobile-target="crossSectionPane" aria-label="Jump to cross section tools" aria-current="true">Profile</button>
-        <button type="button" data-mobile-target="floodHistoryPane" aria-label="Jump to flood history">History</button>
-        <button type="button" data-mobile-target="exportPane" aria-label="Jump to saved lines and export">Export</button>
+        <button type="button" data-mobile-target="crossSectionPane" aria-label="Open Road Profile" aria-current="true">Profile</button>
+        <button type="button" data-mobile-target="floodHistoryPane" aria-label="Open Flood Outlook">Outlook</button>
+        <button type="button" data-mobile-target="exportPane" aria-label="Open Save and Export">Export</button>
       </nav>
 
-      <section class="toolPane crossSectionPane" id="crossSectionPane">
+      <section class="toolPane crossSectionPane isWorkspaceActive" id="crossSectionPane">
         <div class="toolTitleRow">
           <div class="toolTitle">
             Road Profile
@@ -4073,10 +4115,23 @@
       }, 180);
     }
 
+    function desktopWorkspaceTabs(){
+      return window.matchMedia("(min-width: 1181px)").matches;
+    }
+
     function setMobileToolActive(paneId){
       document.querySelectorAll("[data-mobile-target]").forEach(button => {
         button.setAttribute("aria-current", String(button.dataset.mobileTarget === paneId));
       });
+      document.querySelectorAll(".rightStack > .toolPane").forEach(pane => {
+        pane.classList.toggle("isWorkspaceActive", pane.id === paneId);
+      });
+      if(desktopWorkspaceTabs()){
+        window.requestAnimationFrame(() => {
+          resizeCharts();
+          map.invalidateSize();
+        });
+      }
     }
 
     function installMobileToolNavigation(){
@@ -4092,6 +4147,10 @@
           if(!pane) return;
           navigationLockUntil = performance.now() + 1000;
           setMobileToolActive(pane.id);
+          if(desktopWorkspaceTabs()){
+            pane.scrollTop = 0;
+            return;
+          }
           const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
           pane.scrollIntoView({ behavior, block:"start" });
         });
@@ -4307,6 +4366,10 @@
     function renderRoadRiskTourStep(){
       const step = ROADRISK_TOUR_STEPS[roadRiskTourIndex];
       if(!step) return;
+      if(desktopWorkspaceTabs()){
+        const pane = document.querySelector(step.target)?.closest(".toolPane");
+        if(pane) setMobileToolActive(pane.id);
+      }
       setText("roadRiskTourProgress", `${roadRiskTourIndex + 1} of ${ROADRISK_TOUR_STEPS.length}`);
       setText("roadRiskTourTitle", step.title);
       $("roadRiskTourBody").innerHTML = step.body;
