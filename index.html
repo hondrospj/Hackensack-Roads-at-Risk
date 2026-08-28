@@ -1947,6 +1947,13 @@
       padding:7px 10px;
     }
 
+    .drawPromptActions{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
     button:focus-visible,
     input:focus-visible,
     select:focus-visible,
@@ -3838,7 +3845,10 @@
   <div id="map" aria-label="Roads at Risk map"></div>
   <div class="drawPrompt" id="drawPrompt" role="status" aria-live="polite" hidden>
     <span id="drawPromptText">Tap the map to choose the first point.</span>
-    <button id="cancelDrawBtn" class="secondary" type="button">Cancel</button>
+    <div class="drawPromptActions">
+      <button id="finishDrawBtn" type="button" hidden>Finish line</button>
+      <button id="cancelDrawBtn" class="secondary" type="button">Cancel</button>
+    </div>
   </div>
 
   <div class="shell" id="shell">
@@ -4088,10 +4098,11 @@
       savedLineLayers:null,
       activeSavedLineId:null,
       comparisonSections:[],
-      activeEndpointLabels:null,
+      activeVertexLabels:[],
       activeSectionColor:"#22d3ee",
       nextEndpointNumber:1,
-      pendingMarker:null,
+      pendingMarkers:[],
+      pendingLine:null,
       inspectMarker:null,
       profile:[],
       chart:null,
@@ -4407,7 +4418,7 @@
       profile:{
         title:"Road Profile",
         tourStep:2,
-        body:`<p>Press <strong>Draw</strong> and choose two endpoints. The first profile is numbered <strong>1–2</strong>, the next <strong>3–4</strong>, and so on; the same numbers appear on the map and graph. Draw again to keep the earlier profile visible and add another comparison line.</p><p>Drag the newest line's endpoints to refine it. The summary and pink exposure layer describe that active line. Use NAVD88 or MLLW, then choose a flood stage or enter an exact water level to test every displayed profile against the same scenario.</p>`
+        body:`<p>Press <strong>Draw</strong> and click along the road. Every click adds a numbered vertex—<strong>1, 2, 3, 4</strong>, and so on—so one profile can bend through as many points as needed. Press <strong>Finish line</strong> when the route is complete; the same numbers appear on the map and graph.</p><p>Draw again to retain the earlier profile and add another comparison line. Drag any vertex on the newest line to refine it. The summary and pink exposure layer describe that active line.</p>`
       },
       outlook:{
         title:"Flood Outlook",
@@ -4435,7 +4446,7 @@
       {
         title:"Draw the road you care about",
         target:"#drawBtn",
-        body:`<p>Press <strong>Draw</strong>, then choose two endpoints. They are numbered in order—<strong>1–2</strong>, then <strong>3–4</strong>, then <strong>5–6</strong>—and those same numbers label the map and graph.</p><p>Draw again to compare another road without losing the first. The newest line remains editable; drag its endpoints to refine it. A chart gap means the line left the available elevation surface, not that elevation fell to zero.</p>`
+        body:`<p>Press <strong>Draw</strong>, then click each turn along the road. The vertices are numbered in order and those same numbers label the map and graph. Add as many points as the route needs, then press <strong>Finish line</strong>.</p><p>Draw again to compare another road without losing the first. Every vertex on the newest line remains editable. A chart gap means the route left the available elevation surface, not that elevation fell to zero.</p>`
       },
       {
         title:"Read the three headline numbers",
@@ -5056,25 +5067,44 @@
       };
     }
 
-    function buildProfile(a, b){
-      const lengthFt = haversineFeet(a, b);
-      const stepFt = 5;
-      const n = clamp(Math.ceil(lengthFt / stepFt), 12, 1200);
+    function polylineVertexDistances(points){
+      const distances = [0];
+      for(let i=1; i<points.length; i++){
+        distances.push(distances[i - 1] + haversineFeet(points[i - 1], points[i]));
+      }
+      return distances;
+    }
+
+    function buildProfilePath(points){
+      if(!Array.isArray(points) || points.length < 2) return [];
+      const vertexDistances = polylineVertexDistances(points);
+      const totalLengthFt = vertexDistances[vertexDistances.length - 1];
+      const stepFt = Math.max(5, totalLengthFt / 2400);
       const rows = [];
       let lastValidDistance = null;
-      for(let i=0; i<=n; i++){
-        const t = i / n;
-        const p = interpolatePoint(a, b, t);
-        const elev = sampleDem(p.lat, p.lng);
-        const distance = lengthFt * t;
-        if(Number.isFinite(elev)){
-          lastValidDistance = distance;
-          rows.push({ distanceFt:distance, elevationFt:elev, lat:p.lat, lng:p.lng });
-        }else if(lastValidDistance !== null){
-          rows.push({ distanceFt:distance, elevationFt:null, lat:p.lat, lng:p.lng });
+      for(let segmentIndex=0; segmentIndex<points.length - 1; segmentIndex++){
+        const a = points[segmentIndex];
+        const b = points[segmentIndex + 1];
+        const segmentLengthFt = haversineFeet(a, b);
+        const samples = Math.max(1, Math.ceil(segmentLengthFt / stepFt));
+        for(let i=segmentIndex ? 1 : 0; i<=samples; i++){
+          const t = i / samples;
+          const p = interpolatePoint(a, b, t);
+          const elev = sampleDem(p.lat, p.lng);
+          const distance = vertexDistances[segmentIndex] + segmentLengthFt * t;
+          if(Number.isFinite(elev)){
+            lastValidDistance = distance;
+            rows.push({ distanceFt:distance, elevationFt:elev, lat:p.lat, lng:p.lng });
+          }else if(lastValidDistance !== null){
+            rows.push({ distanceFt:distance, elevationFt:null, lat:p.lat, lng:p.lng });
+          }
         }
       }
       return rows;
+    }
+
+    function buildProfile(a, b){
+      return buildProfilePath([a, b]);
     }
 
     function updateStats(profile){
@@ -5294,24 +5324,31 @@
       state.chart.update("none");
     }
 
-    const profileEndpointLabelsPlugin = {
-      id:"profileEndpointLabels",
+    const profileVertexLabelsPlugin = {
+      id:"profileVertexLabels",
       afterDatasetsDraw(chart){
         const { ctx, chartArea } = chart;
         chart.data.datasets.forEach((dataset, datasetIndex) => {
-          if(!dataset.endpointLabels || !chart.isDatasetVisible(datasetIndex)) return;
-          const points = chart.getDatasetMeta(datasetIndex).data.filter(point => !point.skip);
-          if(!points.length) return;
-          const endpoints = [
-            { point:points[0], label:dataset.endpointLabels[0] },
-            { point:points[points.length - 1], label:dataset.endpointLabels[1] }
-          ];
+          if(!dataset.vertexMarkers?.length || !chart.isDatasetVisible(datasetIndex)) return;
+          const metaPoints = chart.getDatasetMeta(datasetIndex).data;
+          const dataPoints = dataset.data || [];
           ctx.save();
           ctx.font='900 11px ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif';
           ctx.textAlign="center";
           ctx.textBaseline="middle";
-          for(const endpoint of endpoints){
-            const { x, y } = endpoint.point;
+          for(const vertex of dataset.vertexMarkers){
+            let bestIndex = -1;
+            let bestDistance = Infinity;
+            dataPoints.forEach((point, index) => {
+              if(!Number.isFinite(point?.y) || metaPoints[index]?.skip) return;
+              const delta = Math.abs(point.x - vertex.distanceFt);
+              if(delta < bestDistance){
+                bestDistance = delta;
+                bestIndex = index;
+              }
+            });
+            if(bestIndex < 0) continue;
+            const { x, y } = metaPoints[bestIndex];
             if(x < chartArea.left - 2 || x > chartArea.right + 2 || y < chartArea.top - 2 || y > chartArea.bottom + 2) continue;
             ctx.beginPath();
             ctx.arc(x, y, 10, 0, Math.PI * 2);
@@ -5321,29 +5358,39 @@
             ctx.strokeStyle="#07111f";
             ctx.stroke();
             ctx.fillStyle="#07111f";
-            ctx.fillText(String(endpoint.label), x, y + .5);
+            ctx.fillText(String(vertex.label), x, y + .5);
           }
           ctx.restore();
         });
       }
     };
 
+    function profileNumberLabel(labels){
+      return labels?.length ? labels.join("–") : "Profile";
+    }
+
     function renderChart(profile){
       const ctx = $("profileChart");
-      const activeLabels = state.activeEndpointLabels || { start:1, end:2 };
+      const activePoints = currentLineLatLngs() || [];
+      const activeLabels = state.activeVertexLabels.length
+        ? state.activeVertexLabels
+        : activePoints.map((_, index) => index + 1);
       const activeSection = profile.length ? {
         id:"active",
-        startLabel:activeLabels.start,
-        endLabel:activeLabels.end,
+        vertexLabels:activeLabels,
+        vertexDistances:polylineVertexDistances(activePoints),
         color:state.activeSectionColor,
         profile
       } : null;
       const sections = [...state.comparisonSections, ...(activeSection ? [activeSection] : [])];
       const lineDatasets = sections.map(section => ({
-        label:`Profile ${section.startLabel}–${section.endLabel}`,
-        keyLabel:`${section.startLabel}–${section.endLabel}`,
+        label:`Profile ${profileNumberLabel(section.vertexLabels)}`,
+        keyLabel:profileNumberLabel(section.vertexLabels),
         sectionId:section.id,
-        endpointLabels:[section.startLabel, section.endLabel],
+        vertexMarkers:(section.vertexLabels || []).map((label, index) => ({
+          label,
+          distanceFt:section.vertexDistances?.[index] ?? 0
+        })),
         profileSelectable:section.id === "active",
         data:(section.profile || []).map(point => ({
           x:point.distanceFt,
@@ -5466,7 +5513,7 @@
             }
           }
         },
-        plugins:[profileEndpointLabelsPlugin]
+        plugins:[profileVertexLabelsPlugin]
       };
       if(state.chart){
         const visibility = chartVisibility(state.chart);
@@ -5816,12 +5863,16 @@
 
     const SECTION_COLORS = ["#22d3ee","#a78bfa","#fbbf24","#34d399","#f472b6","#fb923c","#60a5fa","#e879f9"];
 
-    function removeActiveSection(){
+    function removePendingDrawing(){
+      state.pendingMarkers.forEach(marker => map.removeLayer(marker));
+      state.pendingMarkers = [];
+      if(state.pendingLine) map.removeLayer(state.pendingLine);
+      state.pendingLine = null;
       state.pendingPoints = [];
-      if(state.pendingMarker){
-        map.removeLayer(state.pendingMarker);
-        state.pendingMarker = null;
-      }
+    }
+
+    function removeActiveSection(){
+      removePendingDrawing();
       state.markers.forEach(m => map.removeLayer(m));
       state.markers = [];
       if(state.line) map.removeLayer(state.line);
@@ -5830,42 +5881,40 @@
       state.riskLine = null;
       state.profile = [];
       state.activeSavedLineId = null;
-      state.activeEndpointLabels = null;
+      state.activeVertexLabels = [];
       resetInspection();
     }
 
     function renderComparisonSections(){
       comparisonLayerGroup.clearLayers();
       for(const section of state.comparisonSections){
-        L.polyline([section.a, section.b], {
+        L.polyline(section.points, {
           color:section.color,
           weight:4,
           opacity:.82,
           lineCap:"round"
         }).addTo(comparisonLayerGroup);
-        L.marker(section.a, {
-          icon:markerIcon(section.startLabel, section.color),
-          interactive:false,
-          title:`Endpoint ${section.startLabel}`
-        }).addTo(comparisonLayerGroup);
-        L.marker(section.b, {
-          icon:markerIcon(section.endLabel, section.color),
-          interactive:false,
-          title:`Endpoint ${section.endLabel}`
-        }).addTo(comparisonLayerGroup);
+        section.points.forEach((point, index) => {
+          const label = section.vertexLabels[index];
+          L.marker(point, {
+            icon:markerIcon(label, section.color),
+            interactive:false,
+            title:`Vertex ${label}`
+          }).addTo(comparisonLayerGroup);
+        });
       }
     }
 
     function archiveActiveSection(){
       const pts = currentLineLatLngs();
-      if(!pts || !state.profile.length || !state.activeEndpointLabels) return;
+      if(!pts || !state.profile.length || !state.activeVertexLabels.length) return;
+      const labels = state.activeVertexLabels.slice();
       state.comparisonSections.push({
-        id:`drawn-${state.activeEndpointLabels.start}-${state.activeEndpointLabels.end}`,
-        startLabel:state.activeEndpointLabels.start,
-        endLabel:state.activeEndpointLabels.end,
+        id:`drawn-${labels[0]}-${labels[labels.length - 1]}`,
+        vertexLabels:labels,
+        vertexDistances:polylineVertexDistances(pts),
         color:state.activeSectionColor,
-        a:L.latLng(pts[0].lat, pts[0].lng),
-        b:L.latLng(pts[1].lat, pts[1].lng),
+        points:pts.map(point => L.latLng(point.lat, point.lng)),
         profile:state.profile.slice()
       });
       renderComparisonSections();
@@ -5893,7 +5942,11 @@
       });
     }
 
-    function drawSection(a, b, fit=false, savedLineId=null, append=false){
+    function drawSection(pointsOrA, b=null, fit=false, savedLineId=null, append=false){
+      const points = (Array.isArray(pointsOrA) ? pointsOrA : [pointsOrA, b])
+        .filter(Boolean)
+        .map(point => L.latLng(point.lat, point.lng));
+      if(points.length < 2) return;
       if(append){
         archiveActiveSection();
         removeActiveSection();
@@ -5902,16 +5955,17 @@
       }
       state.activeSavedLineId = savedLineId;
       const startLabel = state.nextEndpointNumber;
-      const endLabel = startLabel + 1;
-      state.nextEndpointNumber = endLabel + 1;
-      state.activeEndpointLabels = { start:startLabel, end:endLabel };
-      state.activeSectionColor = SECTION_COLORS[Math.floor((startLabel - 1) / 2) % SECTION_COLORS.length];
+      state.activeVertexLabels = points.map((_, index) => startLabel + index);
+      state.nextEndpointNumber += points.length;
+      state.activeSectionColor = SECTION_COLORS[state.comparisonSections.length % SECTION_COLORS.length];
       renderSavedLines();
-      state.markers = [
-        L.marker(a, { icon:markerIcon(startLabel), draggable:true, zIndexOffset:2000, title:`Section endpoint ${startLabel}` }).addTo(map),
-        L.marker(b, { icon:markerIcon(endLabel), draggable:true, zIndexOffset:2000, title:`Section endpoint ${endLabel}` }).addTo(map)
-      ];
-      state.line = L.polyline([a, b], {
+      state.markers = points.map((point, index) => L.marker(point, {
+        icon:markerIcon(state.activeVertexLabels[index]),
+        draggable:true,
+        zIndexOffset:2000,
+        title:`Section vertex ${state.activeVertexLabels[index]}`
+      }).addTo(map));
+      state.line = L.polyline(points, {
         color:state.activeSectionColor,
         weight:5,
         opacity:.95,
@@ -5933,19 +5987,19 @@
         });
         marker.on("dragend", () => {
           const pts = state.markers.map(m => m.getLatLng());
-          runProfile(pts[0], pts[1]);
+          runProfile(pts);
         });
       }
-      if(fit) map.fitBounds(L.latLngBounds([a,b]).pad(.35));
-      runProfile(a, b);
+      if(fit) map.fitBounds(L.latLngBounds(points).pad(.35));
+      runProfile(points);
     }
 
-    function runProfile(a, b){
+    function runProfile(points){
       if(!state.raster){
         setText("chartStatus", "DEM still loading");
         return;
       }
-      state.profile = buildProfile(a, b);
+      state.profile = buildProfilePath(points);
       state.profileXZoom = null;
       state.profileYZoom = null;
       state.selectedIndex = defaultInspectionIndex(state.profile);
@@ -5957,18 +6011,26 @@
 
     function setDrawMode(active){
       state.drawMode = active;
-      state.pendingPoints = [];
-      if(state.pendingMarker){
-        map.removeLayer(state.pendingMarker);
-        state.pendingMarker = null;
-      }
+      removePendingDrawing();
       $("drawBtn").classList.toggle("active", active);
-      $("drawBtn").textContent = active ? "Click two points" : "Draw";
+      $("drawBtn").textContent = active ? "Add points" : "Draw";
       map.getContainer().style.cursor = active ? "crosshair" : "";
       const prompt = $("drawPrompt");
       if(prompt){
         prompt.hidden = !active;
         setText("drawPromptText", "Tap the map to choose the first point.");
+      }
+      const finishButton = $("finishDrawBtn");
+      if(finishButton) finishButton.hidden = true;
+    }
+
+    function finishPendingLine(){
+      if(!state.drawMode || state.pendingPoints.length < 2) return;
+      const points = state.pendingPoints.map(point => L.latLng(point.lat, point.lng));
+      setDrawMode(false);
+      drawSection(points, null, false, null, true);
+      if(window.matchMedia("(max-width: 1180px)").matches){
+        window.setTimeout(() => $("crossSectionPane").scrollIntoView({ behavior:"smooth", block:"start" }), 120);
       }
     }
 
@@ -5989,21 +6051,19 @@
     function exportLineRecords(){
       const records = state.comparisonSections.map(section => ({
         id:section.id,
-        name:`Profile ${section.startLabel}–${section.endLabel}`,
+        name:`Profile ${profileNumberLabel(section.vertexLabels)}`,
         thresholdFt:state.thresholdFt,
         createdAt:"",
-        a:section.a,
-        b:section.b
+        points:section.points
       }));
       const active = currentLineLatLngs();
-      if(active && state.activeEndpointLabels){
+      if(active && state.activeVertexLabels.length){
         records.push({
-          id:`drawn-${state.activeEndpointLabels.start}-${state.activeEndpointLabels.end}`,
-          name:`Profile ${state.activeEndpointLabels.start}–${state.activeEndpointLabels.end}`,
+          id:`drawn-${state.activeVertexLabels[0]}-${state.activeVertexLabels[state.activeVertexLabels.length - 1]}`,
+          name:`Profile ${profileNumberLabel(state.activeVertexLabels)}`,
           thresholdFt:state.thresholdFt,
           createdAt:"",
-          a:active[0],
-          b:active[1]
+          points:active
         });
       }
       records.push(...state.savedLines.map(line => ({
@@ -6011,8 +6071,7 @@
         name:line.name || "Saved line",
         thresholdFt:Number.isFinite(line.thresholdFt) ? line.thresholdFt : state.thresholdFt,
         createdAt:line.createdAt || "",
-        a:L.latLng(line.a.lat, line.a.lng),
-        b:L.latLng(line.b.lat, line.b.lng)
+        points:(line.points?.length ? line.points : [line.a, line.b]).map(point => L.latLng(point.lat, point.lng))
       })));
       return records;
     }
@@ -6023,7 +6082,7 @@
         "threshold_ft_navd88","clearance_ft","latitude","longitude"
       ]];
       for(const record of records){
-        const profile = buildProfile(record.a, record.b);
+        const profile = buildProfilePath(record.points);
         profile.forEach((point, pointIndex) => rows.push([
           record.id,
           record.name,
@@ -6042,20 +6101,20 @@
     function shapefileGeoJson(records){
       const features = [];
       for(const record of records){
-        const profile = buildProfile(record.a, record.b);
+        const profile = buildProfilePath(record.points);
         features.push({
           type:"Feature",
           geometry:{
             type:"LineString",
             coordinates:profile.length
               ? profile.map(point => [point.lng, point.lat])
-              : [[record.a.lng, record.a.lat], [record.b.lng, record.b.lat]]
+              : record.points.map(point => [point.lng, point.lat])
           },
           properties:{
             section_id:record.id,
             name:record.name,
             thresh_ft:Number(record.thresholdFt.toFixed(3)),
-            length_ft:Number((map.distance(record.a, record.b) * FT_PER_M).toFixed(2)),
+            length_ft:Number(polylineVertexDistances(record.points).slice(-1)[0].toFixed(2)),
             created:record.createdAt ? record.createdAt.slice(0, 10) : ""
           }
         });
@@ -6176,7 +6235,7 @@
     function currentLineLatLngs(){
       if(state.markers.length >= 2) return state.markers.map(marker => marker.getLatLng());
       const linePoints = state.line?.getLatLngs?.();
-      return Array.isArray(linePoints) && linePoints.length >= 2 ? linePoints.slice(0, 2) : null;
+      return Array.isArray(linePoints) && linePoints.length >= 2 ? linePoints.slice() : null;
     }
 
     function sanitizeLineName(name){
@@ -6186,7 +6245,9 @@
     function loadSavedLines(){
       try{
         const rows = JSON.parse(localStorage.getItem(SAVED_LINES_KEY) || "[]");
-        state.savedLines = Array.isArray(rows) ? rows.filter(row => row?.a && row?.b && row?.id) : [];
+        state.savedLines = Array.isArray(rows)
+          ? rows.filter(row => row?.id && ((Array.isArray(row.points) && row.points.length >= 2) || (row?.a && row?.b)))
+          : [];
       }catch(err){
         console.warn("Saved line load failed", err);
         state.savedLines = [];
@@ -6206,10 +6267,9 @@
       if(!map._loaded) return;
       for(const saved of state.savedLines){
         if(saved.id === state.activeSavedLineId) continue;
-        const layer = L.polyline([
-          L.latLng(saved.a.lat, saved.a.lng),
-          L.latLng(saved.b.lat, saved.b.lng)
-        ], {
+        const savedPoints = (saved.points?.length ? saved.points : [saved.a, saved.b])
+          .map(point => L.latLng(point.lat, point.lng));
+        const layer = L.polyline(savedPoints, {
           color:"#a78bfa",
           weight:4,
           opacity:.86,
@@ -6275,7 +6335,8 @@
       const input = $("lineNameInput");
       const fallback = `Line ${state.savedLines.length + 1}`;
       const name = sanitizeLineName(input?.value) || fallback;
-      const [a, b] = pts;
+      const a = pts[0];
+      const b = pts[pts.length - 1];
       const id = `line-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
       state.savedLines.unshift({
         id,
@@ -6283,6 +6344,7 @@
         thresholdFt:state.thresholdFt,
         a:{ lat:a.lat, lng:a.lng },
         b:{ lat:b.lat, lng:b.lng },
+        points:pts.map(point => ({ lat:point.lat, lng:point.lng })),
         createdAt:new Date().toISOString()
       });
       state.savedLines = state.savedLines.slice(0, 12);
@@ -6297,7 +6359,9 @@
       if(!line) return;
       setDrawMode(false);
       setThreshold(toDisplayDatum(line.thresholdFt ?? state.thresholdFt));
-      drawSection(L.latLng(line.a.lat, line.a.lng), L.latLng(line.b.lat, line.b.lng), true, line.id);
+      const points = (line.points?.length ? line.points : [line.a, line.b])
+        .map(point => L.latLng(point.lat, point.lng));
+      drawSection(points, null, true, line.id);
       setExportStatus(`Loaded "${line.name || "saved line"}".`);
     }
 
@@ -6418,13 +6482,17 @@
     }
 
     $("drawBtn").addEventListener("click", () => {
-      const next = !state.drawMode;
-      setDrawMode(next);
-      if(next && window.matchMedia("(max-width: 1180px)").matches){
+      if(state.drawMode){
+        finishPendingLine();
+        return;
+      }
+      setDrawMode(true);
+      if(window.matchMedia("(max-width: 1180px)").matches){
         if($("shell").classList.contains("paneExpanded")) togglePaneExpansion("crossSectionPane");
         window.setTimeout(() => $("map").scrollIntoView({ behavior:"smooth", block:"start" }), 80);
       }
     });
+    $("finishDrawBtn").addEventListener("click", finishPendingLine);
     $("cancelDrawBtn").addEventListener("click", () => setDrawMode(false));
     $("clearBtn").addEventListener("click", () => {
       setDrawMode(false);
@@ -6490,21 +6558,32 @@
         return;
       }
       state.pendingPoints.push(event.latlng);
-      if(state.pendingPoints.length === 1){
-        const color = SECTION_COLORS[Math.floor((state.nextEndpointNumber - 1) / 2) % SECTION_COLORS.length];
-        state.pendingMarker = L.marker(event.latlng, {
-          icon:markerIcon(state.nextEndpointNumber, color),
-          title:`Section endpoint ${state.nextEndpointNumber}`
-        }).addTo(map);
-        setText("chartStatus", "Choose endpoint");
-        setText("drawPromptText", "Tap the map once more to choose the second point.");
-        return;
-      }
-      const [a,b] = state.pendingPoints;
-      setDrawMode(false);
-      drawSection(a,b,false,null,true);
-      if(window.matchMedia("(max-width: 1180px)").matches){
-        window.setTimeout(() => $("crossSectionPane").scrollIntoView({ behavior:"smooth", block:"start" }), 120);
+      const color = SECTION_COLORS[state.comparisonSections.length % SECTION_COLORS.length];
+      const label = state.nextEndpointNumber + state.pendingPoints.length - 1;
+      state.pendingMarkers.push(L.marker(event.latlng, {
+        icon:markerIcon(label, color),
+        interactive:false,
+        title:`Section vertex ${label}`
+      }).addTo(map));
+      if(state.pendingPoints.length >= 2){
+        if(!state.pendingLine){
+          state.pendingLine = L.polyline(state.pendingPoints, {
+            color,
+            weight:5,
+            opacity:.88,
+            lineCap:"round",
+            dashArray:"8 6"
+          }).addTo(map);
+        }else{
+          state.pendingLine.setLatLngs(state.pendingPoints);
+        }
+        $("finishDrawBtn").hidden = false;
+        $("drawBtn").textContent = "Finish line";
+        setText("chartStatus", `${state.pendingPoints.length} vertices ready`);
+        setText("drawPromptText", "Add another point, or finish this line.");
+      }else{
+        setText("chartStatus", "Choose another point");
+        setText("drawPromptText", "Add the next point along the road.");
       }
     });
 
