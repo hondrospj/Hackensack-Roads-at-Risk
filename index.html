@@ -2667,6 +2667,7 @@
         min-height:220px;
       }
     }
+
     /* RoadRisk workbench — shared Floodmapper/Dashboard design language. */
     :root{
       --right-rail:clamp(560px, 39vw, 680px);
@@ -3327,6 +3328,7 @@
         animation-iteration-count:1 !important;
       }
     }
+
     /* Pane help and guided tutorial. */
     .mapHeaderActions,
     .paneHeaderActions{
@@ -6045,10 +6047,12 @@
     }
 
     function defaultSection(){
-      // Passaic Street: west side of town to the Hackensack River side.
+      // Default municipality cross-section.
       drawSection(
         L.latLng(40.90266, -74.06176),
         L.latLng(40.88959, -74.03985),
+        false,
+        null,
         false
       );
     }
