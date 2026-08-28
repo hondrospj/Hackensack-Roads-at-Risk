@@ -3252,9 +3252,14 @@
       .crossSectionPane .paneActions{
         width:auto;
         display:grid;
-        grid-template-columns:auto 40px 40px;
+        grid-template-columns:auto auto 40px 40px;
         align-items:center;
         gap:8px;
+      }
+
+      .shell.paneExpanded .crossSectionPane .paneActions{
+        width:100%;
+        grid-template-columns:minmax(0,1fr) auto 40px 40px;
       }
     }
 
@@ -3563,7 +3568,11 @@
       }
 
       .crossSectionPane .paneActions{
-        grid-template-columns:minmax(0,1fr) 44px 44px;
+        grid-template-columns:minmax(0,1fr) auto 44px 44px;
+      }
+
+      .shell.paneExpanded .crossSectionPane .paneActions{
+        grid-template-columns:minmax(0,1fr) auto 44px 44px;
       }
 
       .floodHistoryPane .toolTitleRow,
@@ -3894,6 +3903,7 @@
           </div>
           <div class="paneActions">
             <button id="drawBtn" class="drawAction" type="button">Draw</button>
+            <button id="clearProfilesBtn" class="drawAction secondary" type="button" aria-label="Clear all profiles">Clear</button>
             <button class="paneHelpBtn" type="button" data-help-key="profile" aria-label="Explain the road profile pane" title="Explain the road profile pane">?</button>
             <button class="expandBtn secondary" type="button" data-expand-pane="crossSectionPane" aria-controls="crossSectionPane" aria-expanded="false" aria-label="Expand cross section" title="Expand cross section">+</button>
           </div>
@@ -6494,6 +6504,10 @@
     });
     $("finishDrawBtn").addEventListener("click", finishPendingLine);
     $("cancelDrawBtn").addEventListener("click", () => setDrawMode(false));
+    $("clearProfilesBtn").addEventListener("click", () => {
+      setDrawMode(false);
+      clearSection();
+    });
     $("clearBtn").addEventListener("click", () => {
       setDrawMode(false);
       clearSection();
