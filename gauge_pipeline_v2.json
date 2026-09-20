@@ -1,0 +1,16 @@
+{
+  "schema": "nj-road-risk-gauge-pipeline-v2",
+  "releaseVersion": "20260920-nj-universal-v2",
+  "floodmapperRepo": "Hackensack-floodmapper",
+  "sourcePrecedence": [
+    "primary-usgs-continuous",
+    "bias-corrected-noaa-historical-fill",
+    "official-usgs-storm-tide-crest-override"
+  ],
+  "primaryUsgsGaugeId": "01378570",
+  "noaaStationId": "8518750",
+  "noaaRegion": "the-battery",
+  "noaaBiasCorrectionFt": 0.715,
+  "crestUsgsStationId": "01378626",
+  "calibrationPairKey": "01378570:the-battery"
+}
